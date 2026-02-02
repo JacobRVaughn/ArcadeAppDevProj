@@ -144,3 +144,14 @@ input:focus {
     justify-content: center;
     gap: 0.3rem;
 }
+
+.role-options {
+    display: flex;
+    gap: 100px;
+    margin-bottom: 20px;
+}
+
+.role-item {
+    display: inline-flex;
+    align-items: center;
+}

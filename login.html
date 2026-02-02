@@ -45,6 +45,20 @@
                 <label for="signup_confirm">Confirm Password</label>
                 <input type="password" id="signup_confirm" name="signup_confirm" placeholder="Confirm Password" required>
 
+                <label for="signup_role">Account Type</label> <br> <br>
+
+                <div class="role-options">
+                    <label>
+                        <input type="radio" name="role" value="student" required>
+                        Student
+                    </label>
+
+                    <label>
+                        <input type="radio" name="role" value="teacher">
+                        Teacher
+                    </label>
+                </div>
+
                 <button type="submit" name="signup_submit" class="submit-btn">Sign Up</button>
             </form>
 

@@ -30,19 +30,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } 
     // Signup Post Form
     elseif (isset($_POST['signup_submit']) && isset($_POST["signup_username"]) 
-        && isset($_POST["signup_email"]) && isset($_POST["signup_password"]) && isset($_POST["signup_confirm"])
+        && isset($_POST["signup_email"]) && isset($_POST["signup_password"]) && isset($_POST["signup_confirm"]) && isset($_POST["signup_confirm"])
     ) {
 
         $signup_username = trim($_POST["signup_username"]);
         $signup_email = trim($_POST["signup_email"]);
         $signup_password = trim($_POST["signup_password"]);
         $signup_confirm = trim($_POST["signup_confirm"]);
+        $role = $_POST["role"];
 
         if ($signup_password != $signup_confirm) {
             return "passwords do not match";
         }
 
-        $result = signupUser($signup_username, $signup_email, $signup_password);
+        $result = signupUser($signup_username, $signup_email, $signup_password, $role);
 
         if ($result == 'success') {
             $_SESSION['username'] = $signup_username;

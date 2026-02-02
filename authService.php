@@ -29,13 +29,17 @@ function loginUser($email, $password) {
 }
 
 //Create db user table entry for a new user
-function signupUser($username,$email,$password) {
+function signupUser($username,$email,$password,$role) {
     global $conn;
+
+    if (checkExistingAcc($email, $username)) {
+        return 'account for username or email already exist';
+    }
 
     $hashedPass = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO users (username, password, email) VALUES (?,?,?)");
-    $stmt->bind_param("sss", $username, $hashedPass, $email);
+    $stmt = $conn->prepare("INSERT INTO users (username, password, email, role) VALUES (?,?,?,?)");
+    $stmt->bind_param("ssss", $username, $hashedPass, $email, $role);
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
@@ -44,6 +48,26 @@ function signupUser($username,$email,$password) {
         return 'sql error has occured';
     }
     
+}
+
+// Each account needs a unique username and email no duplicates 
+// we check in the users table for any duplicate entries
+// returns true if there is an existing account
+function checkExistingAcc($email, $username) {
+    global $conn;
+
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+    $stmt->bind_param("ss", $username, $email);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        return true;
+    } else {
+        return false;
+    }
+
 }
 
 
