@@ -1,96 +1,146 @@
+/* Reset default browser styles */
 * {
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
 }
 
-body {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+/* Full-page container */
+.auth-container {
     min-height: 100vh;
+    background: #020617;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    padding: 2rem;
+    overflow: hidden;
 }
 
-.container {
-    background: white;
-    width: 350px;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+/* Background blobs */
+.background-blur, .background-blur-bottom {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: 1;
+}
+.background-blur {
+    width: 40%;
+    height: 40%;
+    top: -10%;
+    left: -10%;
+    background: rgba(99, 102, 241, 0.1); /* indigo-600/10 */
+}
+.background-blur-bottom {
+    width: 40%;
+    height: 40%;
+    bottom: -10%;
+    right: -10%;
+    background: rgba(6, 182, 212, 0.1); /* cyan-600/10 */
 }
 
-h1 {
+/* Auth box styling */
+.auth-box {
+    position: relative;
+    z-index: 10;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 56, 56, 0.8);
+    border-radius: 2rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: #fff;
     text-align: center;
-    margin-bottom: 20px;
 }
 
-/* Hide radio buttons */
-input[type="radio"] {
-    display: none;
+/* Header inside auth box */
+.auth-box h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+.auth-box p {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    margin-bottom: 1.5rem;
 }
 
 /* Tabs */
 .tabs {
     display: flex;
-    margin-bottom: 20px;
+    margin-bottom: 1.5rem;
+    background: rgba(56, 56, 56, 0.5);
+    border-radius: 1.5rem;
 }
-
-.tabs label {
+.tab {
     flex: 1;
-    padding: 10px;
-    text-align: center;
+    padding: 0.6rem 0;
     cursor: pointer;
-    background: #eee;
-    transition: 0.3s;
-    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    border-radius: 1.5rem;
+    color: #a1a1aa;
+    background: transparent;
+    transition: all 0.3s ease;
 }
-
-#login-tab:checked ~ .tabs label[for="login-tab"],
-#signup-tab:checked ~ .tabs label[for="signup-tab"] {
-    background: #667eea;
-    color: white;
+.tab.active {
+    background: #6366f1; /* Indigo 600 */
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(99,102,241,0.2);
 }
 
 /* Forms */
-.forms {
-    position: relative;
-}
-
-.form {
+form {
     display: none;
-    flex-direction: column;
+    text-align: left;
+}
+form.active {
+    display: block;
 }
 
-.form label {
-    margin-top: 10px;
+/* Input fields */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(100,100,100,0.5);
+    background: rgba(40, 40, 40, 0.6);
+    color: #fff;
+    outline: none;
+    transition: border 0.3s;
+}
+input:focus {
+    border: 1px solid #6366f1;
 }
 
-.form input {
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-}
-
-.form button {
-    margin-top: 20px;
-    padding: 10px;
-    background: #667eea;
+/* Submit buttons */
+.submit-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: #6366f1;
     border: none;
+    border-radius: 1.5rem;
+    font-weight: bold;
     color: white;
-    border-radius: 6px;
     cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+.submit-btn:hover {
+    background: #4f46e5;
+    transform: scale(0.98);
 }
 
-.form button:hover {
-    background: #5a67d8;
-}
-
-/* Show correct form */
-#login-tab:checked ~ .forms .login-form {
+/* Footer */
+.footer {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: #22c55e; /* green-500 */
     display: flex;
-}
-
-#signup-tab:checked ~ .forms .signup-form {
-    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
 }
