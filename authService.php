@@ -2,12 +2,12 @@
 $conn = new mysqli("localhost", "root", "", "arcade_db");
 
 // Called from auth.php to verify login information in the database
-function loginUser($username, $password) {
+function loginUser($email, $password) {
     try {
         global $conn;
 
-        $stmt = $conn->prepare("SELECT password FROM users WHERE username = ?");
-        $stmt->bind_param("s", $username);
+        $stmt = $conn->prepare("SELECT password FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -16,11 +16,6 @@ function loginUser($username, $password) {
         if (!isset($row) || empty($row)) {
             return 'no user matches';
         }
-
-        var_dump($row);
-
-        // var_dump($password);
-        // var_dump($row['password']);
 
         if (password_verify($password, $row['password'])) {
             return 'success';

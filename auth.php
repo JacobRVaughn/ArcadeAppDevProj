@@ -6,13 +6,13 @@ session_start();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Login Post Form
-    if (isset($_POST['login_submit']) && isset($_POST["login_username"]) && isset($_POST["login_password"]) 
+    if (isset($_POST['login_submit']) && isset($_POST["login_email"]) && isset($_POST["login_password"]) 
     ) {
 
-    $username = trim($_POST["login_username"]);
+    $email = trim($_POST["login_email"]);
     $password = trim($_POST["login_password"]);
 
-    $result = loginUser($username,$password);
+    $result = loginUser($email,$password);
 
     if ($result == 'success') {
 
