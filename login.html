@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>User Login Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>EduQuest Arcade</h1>
+
+        <!-- Tabs -->
+        <input type="radio" name="tab" id="login-tab" checked>
+        <input type="radio" name="tab" id="signup-tab">
+
+        <div class="tabs">
+            <label for="login-tab">Login</label>
+            <label for="signup-tab">Sign Up</label>
+        </div>
+
+        <!-- Forms -->
+        <div class="forms">
+
+            <!-- LOGIN -->
+            <form class="form login-form" action="auth.php" method="POST">
+                <label>Username</label>
+                <input type="text" name="login_username" required>
+
+                <label>Password</label>
+                <input type="password" name="login_password" required>
+
+                <button type="submit" name="login_submit">Login</button>
+            </form>
+
+            <!-- SIGNUP -->
+            <form class="form signup-form" action="auth.php" method="POST">
+                <label>Username</label>
+                <input type="text" name="signup_username" required>
+
+                <label>Email</label>
+                <input type="email" name="signup_email" required>
+
+                <label>Password</label>
+                <input type="password" name="signup_password" required>
+
+                <label>Confirm Password</label>
+                <input type="password" name="signup_confirm" required>
+
+                <button type="submit" name="signup_submit">Sign Up</button>
+            </form>
+
+        </div>
+    </div>
+
+</body>
+</html>
