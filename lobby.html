@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EduQuest Lobby</title>
+
+    <!-- Reuse your existing CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-container">
+
+    <!-- Background blobs -->
+    <div class="background-blur"></div>
+    <div class="background-blur-bottom"></div>
+
+    <!-- Lobby box (reuse auth-box styling) -->
+    <div class="auth-box">
+        <h1>EDUQUEST</h1>
+        <p>Select a game type to begin</p>
+
+        <!-- Game Type Selection -->
+        <div class="tabs">
+            <!-- One type for now -->
+            <button class="tab active" id="catchStars" onclick="goToGame(event)">
+                Catch the Stars
+            </button>
+        </div>
+
+        <!-- Footer -->
+    </div>
+
+</div>
+
+<script>
+    function goToGame(event) {
+        event.preventDefault();
+        // Adjust path when you add real games
+        window.location.href = "games/catch_stars.html";
+    }
+</script>
+
+</body>
+</html>
