@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EduQuest Arcade — Student Dashboard</title>
+  <style>
+    :root{
+      --bg:#070A13;
+      --panel: rgba(255,255,255,.04);
+      --panel2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.10);
+      --muted: rgba(255,255,255,.60);
+      --muted2: rgba(255,255,255,.45);
+      --text: rgba(255,255,255,.92);
+      --accent: #4F5DFF;
+      --accent2:#22C55E;
+      --warn:#F59E0B;
+      --danger:#EF4444;
+      --radius: 18px;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--font); background: radial-gradient(1200px 600px at 20% 0%, rgba(79,93,255,.16), transparent 60%),
+                                       radial-gradient(900px 500px at 90% 30%, rgba(34,197,94,.10), transparent 60%),
+                                       var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit; text-decoration:none}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 24px; border-bottom:1px solid var(--stroke);
+      position:sticky; top:0; background: rgba(7,10,19,.72); backdrop-filter: blur(10px);
+      z-index:10;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(79,93,255,.9), rgba(79,93,255,.35));
+      display:grid; place-items:center; font-weight:800; letter-spacing:.5px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .brand h1{font-size:14px; margin:0; letter-spacing:.12em}
+    .brand p{margin:2px 0 0; font-size:12px; color:var(--muted2)}
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px; border-radius:14px;
+      cursor:pointer; font-size:12px; letter-spacing:.06em;
+      transition:.15s ease;
+    }
+    .btn:hover{background: rgba(255,255,255,.10); transform: translateY(-1px)}
+    .btn.primary{background: rgba(79,93,255,.85); border-color: rgba(79,93,255,.55)}
+    .btn.primary:hover{background: rgba(79,93,255,.95)}
+    .wrap{padding:22px 24px}
+    .grid{
+      display:grid;
+      grid-template-columns: 320px 1fr 320px;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .grid{grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .card.pad{padding:16px}
+    .section-title{
+      font-size:12px; letter-spacing:.14em; color:var(--muted2);
+      text-transform:uppercase; margin:0 0 12px;
+    }
+
+    /* Left profile */
+    .profile-head{display:flex; gap:12px; align-items:center}
+    .avatar{
+      width:56px; height:56px; border-radius:18px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      display:grid; place-items:center;
+      overflow:hidden;
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover}
+    .avatar .initials{font-weight:800; letter-spacing:.08em}
+    .who .name{font-weight:700; font-size:16px; margin:0}
+    .who .rank{margin:4px 0 0; font-size:11px; color:var(--muted2); letter-spacing:.14em; text-transform:uppercase}
+    .xp-box{
+      margin-top:14px; padding:12px;
+      border-radius:16px; border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+    }
+    .xp-row{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
+    .bar{
+      height:10px; background: rgba(255,255,255,.10);
+      border-radius:999px; margin-top:10px; overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(79,93,255,1), rgba(79,93,255,.55));
+      border-radius:999px;
+      transition: width .6s ease;
+    }
+    .xp-foot{margin-top:6px; font-size:11px; color:var(--muted2)}
+    .stats{
+      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;
+    }
+    .stat{
+      padding:12px; border-radius:16px; border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+    }
+    .stat .label{font-size:11px; color:var(--muted2); letter-spacing:.12em; text-transform:uppercase}
+    .stat .value{margin-top:6px; font-size:18px; font-weight:800}
+    .profile-actions{margin-top:12px; display:flex; gap:10px}
+    .profile-actions .btn{flex:1}
+
+    /* Center missions */
+    .center-head{
+      display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
+      margin-bottom:12px;
+    }
+    .center-head h2{margin:0; font-size:18px}
+    .center-head p{margin:6px 0 0; color:var(--muted2); font-size:13px}
+    .mission{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:14px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      margin-bottom:12px;
+      transition:.15s ease;
+    }
+    .mission:hover{background: rgba(255,255,255,.05); transform: translateY(-1px)}
+    .m-left{display:flex; gap:12px; align-items:center}
+    .icon{
+      width:46px; height:46px; border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      display:grid; place-items:center;
+      font-size:20px;
+    }
+    .m-title{margin:0; font-weight:700}
+    .m-desc{margin:5px 0 0; font-size:13px; color:var(--muted2)}
+    .tags{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap}
+    .tag{
+      font-size:11px; color:var(--muted);
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.16);
+    }
+
+    /* Right leaderboard */
+    .leader-row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      margin-bottom:10px;
+    }
+    .leader-left{display:flex; gap:10px; align-items:center}
+    .ranknum{
+      width:22px; text-align:center;
+      font-size:12px; color:var(--muted2);
+    }
+    .leader-name{font-size:13px}
+    .leader-score{font-weight:800}
+    .leader-actions{margin-top:10px}
+    .muted{color:var(--muted2)}
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(79,93,255,.12);
+      border:1px solid rgba(79,93,255,.28);
+      font-size:12px; color: rgba(255,255,255,.82);
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+      background: rgba(0,0,0,.75); border:1px solid var(--stroke);
+      padding:10px 12px; border-radius:14px; font-size:13px;
+      opacity:0; pointer-events:none; transition:.18s ease;
+    }
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(-2px)}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">EA</div>
+      <div>
+        <h1>EDUQUEST ARCADE</h1>
+        <p class="muted">Student Dashboard (Sprint 1 prototype)</p>
+      </div>
+    </div>
+    <button class="btn" id="terminateBtn">TERMINATE SESSION</button>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- LEFT: Profile -->
+      <aside class="card pad" aria-label="Student profile">
+        <div class="section-title">Cadet Profile</div>
+
+        <div class="profile-head">
+          <div class="avatar" id="avatarBox">
+            <span class="initials" id="initials">CU</span>
+          </div>
+          <div class="who">
+            <p class="name" id="username">Cadet User</p>
+            <p class="rank" id="rankTitle">Junior Cadet</p>
+          </div>
+        </div>
+
+        <div class="xp-box">
+          <div class="xp-row">
+            <span id="levelText">Level 1</span>
+            <span class="muted" id="xpText">0 XP</span>
+          </div>
+          <div class="bar" aria-label="XP progress">
+            <div id="xpFill"></div>
+          </div>
+          <div class="xp-foot" id="xpFoot">0/1000 XP to next level</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Points</div>
+            <div class="value" id="points">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Accuracy</div>
+            <div class="value" id="accuracy">0%</div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn" id="profileBtn">VIEW PROFILE</button>
+          <button class="btn" id="settingsBtn">SETTINGS</button>
+        </div>
+
+        <div style="margin-top:14px">
+          <span class="pill">⚡ XP & Rank system (placeholder)</span>
+        </div>
+      </aside>
+
+      <!-- CENTER: Missions / Games -->
+      <main class="card pad" aria-label="Active missions">
+        <div class="center-head">
+          <div>
+            <h2>Active Missions</h2>
+            <p>Choose an arcade game to earn XP and climb the ranks.</p>
+          </div>
+          <button class="btn primary" id="allGamesBtn">ALL GAMES</button>
+        </div>
+
+        <div id="missions"></div>
+      </main>
+
+      <!-- RIGHT: Mini leaderboard -->
+      <aside class="card pad" aria-label="Mini leaderboard">
+        <div class="section-title">Top Cadets</div>
+
+        <div id="miniLeaderboard"></div>
+
+        <div class="leader-actions">
+          <button class="btn" style="width:100%" id="fullLeaderboardBtn">VIEW FULL LEADERBOARD</button>
+          <p class="muted" style="margin:10px 2px 0; font-size:12px">
+            Scores are placeholders until backend integration.
+          </p>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Placeholder</div>
+
+  <script>
+    // ---- Placeholder data (swap later with API results) ----
+    const student = {
+      username: "Cadet User",
+      avatarUrl: "", // e.g. "assets/avatar.png" or "https://..."
+      xp: 1450,
+      points: 980,
+      accuracy: 88
+    };
+
+    const missions = [
+      {
+        id: "math-core",
+        icon: "📘",
+        title: "Mathematics Core",
+        desc: "Practice equations & quick mental math.",
+        sector: "Sector 1",
+        rewards: "Rewards: 300 XP"
+      },
+      {
+        id: "bio-science",
+        icon: "🧪",
+        title: "Biological Sciences",
+        desc: "Cells, genetics, and bio fundamentals.",
+        sector: "Sector 2",
+        rewards: "Rewards: 300 XP"
+      },
+      {
+        id: "struct-eng",
+        icon: "⚙️",
+        title: "Structural Engineering",
+        desc: "Logic puzzles and engineering basics.",
+        sector: "Sector 3",
+        rewards: "Rewards: 300 XP"
+      }
+    ];
+
+    const topFive = [
+      { username: "Cadet_Zephyr", score: 3240 },
+      { username: "Nova_Prime", score: 2980 },
+      { username: "Quantum_Leap", score: 2710 },
+      { username: "Star_Dust", score: 2555 },
+      { username: "You", score: 980 }
+    ];
+
+    // ---- XP -> level/rank (demo logic) ----
+    function getLevel(xp) {
+      return Math.floor(xp / 1000) + 1;
+    }
+    function getRankTitle(level) {
+      if (level >= 7) return "Elite Cadet";
+      if (level >= 5) return "Senior Cadet";
+      if (level >= 3) return "Cadet";
+      return "Junior Cadet";
+    }
+
+    // ---- Render profile ----
+    function renderProfile() {
+      const level = getLevel(student.xp);
+      const rankTitle = getRankTitle(level);
+      const progress = student.xp % 1000;
+      const pct = Math.round((progress / 1000) * 100);
+
+      document.getElementById("username").textContent = student.username;
+      document.getElementById("rankTitle").textContent = rankTitle;
+      document.getElementById("levelText").textContent = `Level ${level}`;
+      document.getElementById("xpText").textContent = `${student.xp} XP`;
+      document.getElementById("xpFoot").textContent = `${progress}/1000 XP to next level`;
+      document.getElementById("points").textContent = student.points.toLocaleString();
+      document.getElementById("accuracy").textContent = `${student.accuracy}%`;
+
+      // Avatar
+      const initials = student.username.split(" ").slice(0,2).map(w => (w[0]||"").toUpperCase()).join("");
+      const avatarBox = document.getElementById("avatarBox");
+      const initialsEl = document.getElementById("initials");
+      initialsEl.textContent = initials || "CU";
+
+      if (student.avatarUrl) {
+        avatarBox.innerHTML = `<img src="${student.avatarUrl}" alt="Student avatar" />`;
+      }
+
+      // Progress bar
+      requestAnimationFrame(() => {
+        document.getElementById("xpFill").style.width = `${pct}%`;
+      });
+    }
+
+    // ---- Render missions ----
+    function renderMissions() {
+      const container = document.getElementById("missions");
+      container.innerHTML = "";
+
+      missions.forEach(m => {
+        const el = document.createElement("div");
+        el.className = "mission";
+        el.innerHTML = `
+          <div class="m-left">
+            <div class="icon">${m.icon}</div>
+            <div>
+              <p class="m-title">${m.title}</p>
+              <p class="m-desc">${m.desc}</p>
+              <div class="tags">
+                <span class="tag">${m.sector}</span>
+                <span class="tag">${m.rewards}</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn primary" data-play="${m.id}">PLAY</button>
+        `;
+        container.appendChild(el);
+      });
+
+      container.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-play]");
+        if (!btn) return;
+        const gameId = btn.getAttribute("data-play");
+        showToast(`Play clicked → /student/games/${gameId} (placeholder)`);
+        // Later: window.location.href = `/student/games/${gameId}.html`;
+      }, { once: true });
+    }
+
+    // ---- Render mini leaderboard ----
+    function renderMiniLeaderboard() {
+      const container = document.getElementById("miniLeaderboard");
+      container.innerHTML = "";
+
+      topFive.slice(0,5).forEach((p, i) => {
+        const row = document.createElement("div");
+        row.className = "leader-row";
+        row.innerHTML = `
+          <div class="leader-left">
+            <div class="ranknum">${i + 1}</div>
+            <div class="leader-name">${p.username}</div>
+          </div>
+          <div class="leader-score">${p.score.toLocaleString()}</div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // ---- Placeholder navigation / actions ----
+    function showToast(msg){
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    document.getElementById("terminateBtn").addEventListener("click", () => {
+      showToast("Terminate session (placeholder) → redirect to /login");
+      // Later: clear token/session + window.location.href = "/login.html";
+    });
+
+    document.getElementById("profileBtn").addEventListener("click", () => {
+      showToast("View profile (placeholder) → /student/profile");
+    });
+
+    document.getElementById("settingsBtn").addEventListener("click", () => {
+      showToast("Settings (placeholder) → /student/settings");
+    });
+
+    document.getElementById("allGamesBtn").addEventListener("click", () => {
+      showToast("All games (placeholder) → /student/games");
+    });
+
+    document.getElementById("fullLeaderboardBtn").addEventListener("click", () => {
+      showToast("Leaderboard (placeholder) → /student/leaderboard");
+    });
+
+    // ---- Init ----
+    renderProfile();
+    renderMissions();
+    renderMiniLeaderboard();
+  </script>
+</body>
+</html>
