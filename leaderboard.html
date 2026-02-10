@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leaderboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="auth-container">
+    <div class="background-blur" aria-hidden="true"></div>
+    <div class="background-blur-bottom" aria-hidden="true"></div>
+
+    <!-- Leaderboard Card -->
+    <div class="auth-box leaderboard-auth-box" role="region" aria-label="Leaderboard">
+
+      <!-- Header -->
+      <div class="leaderboard-header">
+        <div class="leaderboard-title">
+
+          <!-- Star Icon -->
+          <div class="leaderboard-star" aria-hidden="true">
+            ★
+          </div>
+
+          <!-- Title Text -->
+          <div>
+            <h1>LEADERBOARD</h1>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Roster List -->
+      <div class="leaderboard-roster" id="roster">
+
+        <!-- TODO: connect to database so it automatically updates the leaderboard -->
+        <!-- Top 3 -->
+
+        <!-- #1 -->
+        <div class="leaderboard-roster-row leaderboard-row-top">
+          <div class="leaderboard-roster-left">
+
+            <div class="leaderboard-rank-bubble">1</div>
+
+            <div class="leaderboard-avatar">A</div>
+
+            <div class="leaderboard-meta">
+              <div class="leaderboard-name">A_user</div>
+              <div class="leaderboard-xp">15,000 XP</div>
+            </div>
+
+          </div>
+
+          <div class="leaderboard-xp">15,000 XP</div>
+        </div>
+
+        <!-- #2 -->
+        <div class="leaderboard-roster-row">
+          <div class="leaderboard-roster-left">
+            <div class="leaderboard-rank-bubble">2</div>
+            <div class="leaderboard-avatar">B</div>
+
+            <div class="leaderboard-meta">
+              <div class="leaderboard-name">B_user</div>
+              <div class="leaderboard-xp">13,750 XP</div>
+            </div>
+          </div>
+
+          <div class="leaderboard-xp">13,750 XP</div>
+        </div>
+
+        <!-- #3 -->
+        <div class="leaderboard-roster-row">
+          <div class="leaderboard-roster-left">
+            <div class="leaderboard-rank-bubble">3</div>
+            <div class="leaderboard-avatar">C</div>
+
+            <div class="leaderboard-meta">
+              <div class="leaderboard-name">C_user</div>
+              <div class="leaderboard-xp">10,500 XP</div>
+            </div>
+          </div>
+
+          <div class="leaderboard-xp">10,500 XP</div>
+        </div>
+
+        <!-- Current User -->
+        <div class="leaderboard-roster-row leaderboard-row-you">
+          <div class="leaderboard-roster-left">
+            <div class="leaderboard-rank-bubble">5</div>
+            <div class="leaderboard-avatar">U</div>
+
+            <div class="leaderboard-meta">
+              <div class="leaderboard-name">You <span class="leaderboard-you-badge">YOU</span></div>
+              <div class="leaderboard-xp">0 XP</div>
+            </div>
+          </div>
+
+          <div class="leaderboard-xp">0 XP</div>
+        </div>
+
+      </div>
+
+      <!-- TODO: expand leaderboard to show all users -->
+      <!-- Button -->
+      <a href="#" class="submit-btn leaderboard-button">VIEW ALL</a>
+
+    </div>
+  </div>
+
+</body>
+
+</html>
