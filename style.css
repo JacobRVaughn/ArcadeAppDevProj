@@ -157,8 +157,6 @@ input:focus {
 }
 
 /*Leaderboard*/
-
-/* Main leaderboard wrapper inside auth-box */
 .leaderboard-auth-box {
     text-align: left;
 }
@@ -325,4 +323,67 @@ input:focus {
     margin-top: 12px;
     text-align: center;
     text-decoration: none;
+}
+
+.full-leaderboard {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.full-leaderboard.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Card */
+.full-leaderboard-content {
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(56, 56, 56, 0.8);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.full-leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.full-leaderboard-header h2 {
+    font-size: 1.2rem;
+}
+
+.close-full-leaderboard {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+/* Scroll area */
+.full-leaderboard-roster {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 6px;
 }

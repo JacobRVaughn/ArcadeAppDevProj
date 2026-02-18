@@ -36,80 +36,35 @@
 
       <!-- Roster List -->
       <div class="leaderboard-roster" id="roster">
-
-        <!-- TODO: connect to database so it automatically updates the leaderboard -->
-        <!-- Top 3 -->
-
-        <!-- #1 -->
-        <div class="leaderboard-roster-row leaderboard-row-top">
-          <div class="leaderboard-roster-left">
-
-            <div class="leaderboard-rank-bubble">1</div>
-
-            <div class="leaderboard-avatar">A</div>
-
-            <div class="leaderboard-meta">
-              <div class="leaderboard-name">A_user</div>
-              <div class="leaderboard-xp">15,000 XP</div>
-            </div>
-
-          </div>
-
-          <div class="leaderboard-xp">15,000 XP</div>
-        </div>
-
-        <!-- #2 -->
-        <div class="leaderboard-roster-row">
-          <div class="leaderboard-roster-left">
-            <div class="leaderboard-rank-bubble">2</div>
-            <div class="leaderboard-avatar">B</div>
-
-            <div class="leaderboard-meta">
-              <div class="leaderboard-name">B_user</div>
-              <div class="leaderboard-xp">13,750 XP</div>
-            </div>
-          </div>
-
-          <div class="leaderboard-xp">13,750 XP</div>
-        </div>
-
-        <!-- #3 -->
-        <div class="leaderboard-roster-row">
-          <div class="leaderboard-roster-left">
-            <div class="leaderboard-rank-bubble">3</div>
-            <div class="leaderboard-avatar">C</div>
-
-            <div class="leaderboard-meta">
-              <div class="leaderboard-name">C_user</div>
-              <div class="leaderboard-xp">10,500 XP</div>
-            </div>
-          </div>
-
-          <div class="leaderboard-xp">10,500 XP</div>
-        </div>
-
-        <!-- Current User -->
-        <div class="leaderboard-roster-row leaderboard-row-you">
-          <div class="leaderboard-roster-left">
-            <div class="leaderboard-rank-bubble">5</div>
-            <div class="leaderboard-avatar">U</div>
-
-            <div class="leaderboard-meta">
-              <div class="leaderboard-name">You <span class="leaderboard-you-badge">YOU</span></div>
-              <div class="leaderboard-xp">0 XP</div>
-            </div>
-          </div>
-
-          <div class="leaderboard-xp">0 XP</div>
-        </div>
-
       </div>
 
-      <!-- TODO: expand leaderboard to show all users -->
       <!-- Button -->
       <button id="viewAllButton" class="submit-btn leaderboard-button" aria-haspopup="dialog"
         aria-controls="fullLeaderboardModal">VIEW ALL</button>
 
+    </div>
+  </div>
+
+  <!-- Full Leaderboard -->
+  <div id="fullLeaderboard" class="full-leaderboard" aria-hidden="true">
+
+    <div class="full-leaderboard-content">
+
+      <!-- Header -->
+      <div class="full-leaderboard-header">
+        <div class="leaderboard-title">
+          <div class="leaderboard-star" aria-hidden="true">★</div>
+          <div>
+            <h1>LEADERBOARD</h1>
+          </div>
+        </div>
+
+        <button id="closeFullLeaderboard" class="close-full-leaderboard" aria-label="Close full leaderboard">✕</button>
+      </div>
+
+      <!-- Scrollable roster -->
+      <div class="full-leaderboard-roster" id="fullRoster" role="list">
+      </div>
     </div>
   </div>
 
