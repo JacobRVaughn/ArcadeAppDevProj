@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EduQuest Arcade — Teacher Dashboard</title>
+  <style>
+    :root{
+      --bg:#070A13;
+      --panel: rgba(255,255,255,.04);
+      --panel2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.10);
+      --muted: rgba(255,255,255,.60);
+      --muted2: rgba(255,255,255,.45);
+      --text: rgba(255,255,255,.92);
+      --accent: #4F5DFF;
+      --accent2:#22C55E;
+      --warn:#F59E0B;
+      --danger:#EF4444;
+      --radius: 18px;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--font);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(79,93,255,.16), transparent 60%),
+                  radial-gradient(900px 500px at 90% 30%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit; text-decoration:none}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 24px; border-bottom:1px solid var(--stroke);
+      position:sticky; top:0; background: rgba(7,10,19,.72); backdrop-filter: blur(10px);
+      z-index:10;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(79,93,255,.9), rgba(79,93,255,.35));
+      display:grid; place-items:center; font-weight:800; letter-spacing:.5px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .brand h1{font-size:14px; margin:0; letter-spacing:.12em}
+    .brand p{margin:2px 0 0; font-size:12px; color:var(--muted2)}
+
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px; border-radius:14px;
+      cursor:pointer; font-size:12px; letter-spacing:.06em;
+      transition:.15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10); transform: translateY(-1px)}
+    .btn.primary{background: rgba(79,93,255,.85); border-color: rgba(79,93,255,.55)}
+    .btn.primary:hover{background: rgba(79,93,255,.95)}
+    .btn.danger{background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35)}
+    .btn.danger:hover{background: rgba(239,68,68,.25)}
+
+    .wrap{padding:22px 24px}
+    .grid{
+      display:grid;
+      grid-template-columns: 360px 1fr 360px;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .grid{grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .card.pad{padding:16px}
+    .section-title{
+      font-size:12px; letter-spacing:.14em; color:var(--muted2);
+      text-transform:uppercase; margin:0 0 12px;
+    }
+    .muted{color:var(--muted2)}
+
+    /* Form controls */
+    .field{
+      display:flex; flex-direction:column; gap:6px;
+      margin-bottom:10px;
+    }
+    .label{
+      font-size:11px; color:var(--muted2); letter-spacing:.12em; text-transform:uppercase;
+    }
+    .input, .select{
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+    }
+    .row{display:flex; gap:10px; align-items:center}
+    .row > * {flex:1}
+    .select{appearance:none; cursor:pointer}
+
+    /* Left: teacher profile + create class */
+    .profile-head{display:flex; gap:12px; align-items:center}
+    .avatar{
+      width:56px; height:56px; border-radius:18px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      display:grid; place-items:center;
+      overflow:hidden;
+      font-weight:800; letter-spacing:.08em;
+    }
+    .who .name{font-weight:700; font-size:16px; margin:0}
+    .who .role{margin:4px 0 0; font-size:11px; color:var(--muted2); letter-spacing:.14em; text-transform:uppercase}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(79,93,255,.12);
+      border:1px solid rgba(79,93,255,.28);
+      font-size:12px; color: rgba(255,255,255,.82);
+    }
+
+    .divider{
+      height:1px; background: var(--stroke);
+      margin:14px 0;
+    }
+
+    /* Class list */
+    .class-item{
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:10px;
+    }
+    .class-top{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+    .class-name{margin:0; font-weight:800}
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+    }
+    .class-meta{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap}
+    .tag{
+      font-size:11px; color:var(--muted);
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.16);
+    }
+    .class-actions{margin-top:10px; display:flex; gap:10px}
+    .class-actions .btn{flex:1}
+
+    /* Center analytics */
+    .center-head{
+      display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
+      margin-bottom:12px;
+    }
+    .center-head h2{margin:0; font-size:18px}
+    .center-head p{margin:6px 0 0; color:var(--muted2); font-size:13px}
+
+    .filters{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    @media (max-width: 1100px){
+      .filters{grid-template-columns:1fr}
+    }
+
+    .stats{
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;
+      margin: 12px 0;
+    }
+    @media (max-width: 700px){
+      .stats{grid-template-columns:1fr}
+    }
+    .stat{
+      padding:12px; border-radius:16px; border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+    }
+    .stat .label{font-size:11px; color:var(--muted2); letter-spacing:.12em; text-transform:uppercase}
+    .stat .value{margin-top:6px; font-size:18px; font-weight:800}
+
+    .note{
+      font-size:12px; color:var(--muted2);
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:10px 12px;
+      margin-top:8px;
+    }
+
+    /* Right: top students */
+    .leader-row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      margin-bottom:10px;
+    }
+    .leader-left{display:flex; gap:10px; align-items:center}
+    .ranknum{
+      width:22px; text-align:center;
+      font-size:12px; color:var(--muted2);
+    }
+    .leader-name{font-size:13px}
+    .leader-score{font-weight:800}
+
+    /* Toast */
+    .toast{
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+      background: rgba(0,0,0,.75); border:1px solid var(--stroke);
+      padding:10px 12px; border-radius:14px; font-size:13px;
+      opacity:0; pointer-events:none; transition:.18s ease;
+    }
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(-2px)}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">EA</div>
+      <div>
+        <h1>EDUQUEST ARCADE</h1>
+        <p class="muted">Teacher Dashboard (Sprint 2 prototype)</p>
+      </div>
+    </div>
+    <div class="row" style="flex:0 0 auto; gap:10px">
+      <button class="btn" id="backToStudentBtn">STUDENT VIEW</button>
+      <button class="btn" id="terminateBtn">TERMINATE SESSION</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- LEFT: Teacher + Create Class -->
+      <aside class="card pad" aria-label="Teacher panel">
+        <div class="section-title">Teacher</div>
+
+        <div class="profile-head">
+          <div class="avatar" id="teacherAvatar">TC</div>
+          <div class="who">
+            <p class="name" id="teacherName">Teacher</p>
+            <p class="role">Instructor</p>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <span class="pill">🏫 Class codes (Google Classroom-style)</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">Create New Class</div>
+
+        <div class="field">
+          <div class="label">Class Name</div>
+          <input class="input" id="classNameInput" placeholder="e.g., Intro to CS" maxlength="40" />
+        </div>
+
+        <div class="row" style="flex: 1; gap:10px">
+          <button class="btn primary" id="createClassBtn" style="flex:2">CREATE CLASS</button>
+          <button class="btn" id="clearClassesBtn" style="flex:1">CLEAR</button>
+        </div>
+
+        <div class="note">
+          Sprint 2: classes are saved in <b>localStorage</b>. Later, this becomes a DB table (<code>classes</code>) + <code>users.class_id</code>.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">My Classes</div>
+        <div id="classList"></div>
+      </aside>
+
+      <!-- CENTER: Performance (mostly mock) -->
+      <main class="card pad" aria-label="Teacher analytics">
+        <div class="center-head">
+          <div>
+            <h2>Class Performance Dashboard</h2>
+            <p>Filter by class, sort results, and adjust time range (mocked for Sprint 2).</p>
+          </div>
+        </div>
+
+        <!-- Dropdown filters -->
+        <div class="filters">
+          <div class="field" style="margin:0">
+            <div class="label">Class</div>
+            <select class="select" id="classSelect">
+              <option value="all">All Classes</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0">
+            <div class="label">Sort By</div>
+            <select class="select" id="sortSelect">
+              <option value="score">Highest Score</option>
+              <option value="accuracy">Highest Accuracy</option>
+              <option value="games">Most Games Played</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0">
+            <div class="label">Time Range</div>
+            <select class="select" id="rangeSelect">
+              <option value="today">Today</option>
+              <option value="week" selected>This Week</option>
+              <option value="month">This Month</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mock stats -->
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Total Students</div>
+            <div class="value" id="statStudents">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Average Score</div>
+            <div class="value" id="statAvgScore">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Average Accuracy</div>
+            <div class="value" id="statAvgAcc">—</div>
+          </div>
+        </div>
+
+        <div class="note" id="mockNote">
+          Showing <b>mock analytics</b> for Sprint 2. Filters update the numbers to simulate real behavior.
+        </div>
+      </main>
+
+      <!-- RIGHT: Top Students (mock) -->
+      <aside class="card pad" aria-label="Top students">
+        <div class="section-title">Top Students</div>
+        <div id="topStudents"></div>
+
+        <div style="margin-top:10px">
+          <button class="btn" style="width:100%" id="fullReportBtn">VIEW FULL REPORT</button>
+          <p class="muted" style="margin:10px 2px 0; font-size:12px">
+            Placeholder route until backend/report page is complete.
+          </p>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Placeholder</div>
+
+  <script>
+    // =========================
+    // Storage keys
+    // =========================
+    const STORAGE_KEY = "eduquest_classes_v1";
+
+    // =========================
+    // Teacher placeholder
+    // =========================
+    const teacher = {
+      name: "Teacher",
+      initials: "TC"
+    };
+
+    // =========================
+    // Mock student performance data (global pool)
+    // Later: replace with API response filtered by class_id
+    // =========================
+    const mockStudentsPool = [
+      { name: "Alex", score: 1320, accuracy: 92, games: 14, classCode: null },
+      { name: "Bri",  score: 1185, accuracy: 89, games: 12, classCode: null },
+      { name: "Chris",score: 1100, accuracy: 85, games: 15, classCode: null },
+      { name: "Dani", score: 1040, accuracy: 83, games: 10, classCode: null },
+      { name: "Evan", score: 980,  accuracy: 88, games: 9,  classCode: null },
+      { name: "Fatima",score: 930, accuracy: 79, games: 11, classCode: null },
+      { name: "Gabe", score: 905,  accuracy: 81, games: 8,  classCode: null }
+    ];
+
+    // =========================
+    // Utilities
+    // =========================
+    function showToast(msg){
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    function generateJoinCode(len = 6){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // avoids confusing 0/O/1/I
+      let code = "";
+      for (let i = 0; i < len; i++){
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    function loadClasses(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch { 
+        return [];
+      }
+    }
+
+    function saveClasses(classes){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(classes));
+    }
+
+    function ensureUniqueCode(existingCodes){
+      let tries = 0;
+      while (tries < 50){
+        const code = generateJoinCode(6);
+        if (!existingCodes.has(code)) return code;
+        tries++;
+      }
+      // fallback (very unlikely)
+      return generateJoinCode(8);
+    }
+
+    // =========================
+    // Rendering: classes
+    // =========================
+    function renderTeacher(){
+      document.getElementById("teacherName").textContent = teacher.name;
+      document.getElementById("teacherAvatar").textContent = teacher.initials;
+    }
+
+    function renderClassList(){
+      const classes = loadClasses();
+      const list = document.getElementById("classList");
+      list.innerHTML = "";
+
+      if (classes.length === 0){
+        list.innerHTML = `<p class="muted" style="margin:0; font-size:13px">No classes yet. Create one above.</p>`;
+        return;
+      }
+
+      classes.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "class-item";
+        el.innerHTML = `
+          <div class="class-top">
+            <div>
+              <p class="class-name">${escapeHtml(c.name)}</p>
+              <div class="class-meta">
+                <span class="tag">Students: ${c.studentsCount}</span>
+                <span class="tag">Created: ${new Date(c.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="code" title="Join code">${c.code}</div>
+          </div>
+
+          <div class="class-actions">
+            <button class="btn" data-copy="${c.code}">COPY CODE</button>
+            <button class="btn primary" data-view="${c.id}">VIEW</button>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function renderClassSelect(){
+      const classes = loadClasses();
+      const select = document.getElementById("classSelect");
+      const current = select.value || "all";
+
+      // Rebuild options
+      select.innerHTML = `<option value="all">All Classes</option>`;
+      classes.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.name} (${c.code})`;
+        select.appendChild(opt);
+      });
+
+      // Restore selection if possible
+      select.value = classes.some(c => c.id === current) ? current : "all";
+    }
+
+    // =========================
+    // Mock analytics behavior
+    // =========================
+    function computeMockAnalytics(){
+      const classes = loadClasses();
+      const classSelect = document.getElementById("classSelect").value;
+      const sort = document.getElementById("sortSelect").value;
+      const range = document.getElementById("rangeSelect").value;
+
+      // Base pool
+      let students = [...mockStudentsPool];
+
+      // If a specific class selected, "simulate" different numbers by seeding via code
+      if (classSelect !== "all"){
+        const cls = classes.find(c => c.id === classSelect);
+        const seed = cls ? hashString(cls.code) : 1;
+        students = students.map((s, i) => {
+          // deterministically adjust stats per class
+          const bump = ((seed + i * 17) % 31) - 15; // -15..15
+          const bump2 = ((seed + i * 9) % 11) - 5;  // -5..5
+          return {
+            ...s,
+            score: Math.max(0, s.score + bump * 8),
+            accuracy: clamp(s.accuracy + bump2, 60, 99),
+            games: Math.max(1, s.games + Math.floor(bump2 / 2))
+          };
+        });
+      }
+
+      // Time range "simulation"
+      const rangeMultiplier = ({
+        today: 0.25,
+        week: 1.0,
+        month: 1.4,
+        all: 2.0
+      })[range] ?? 1.0;
+
+      students = students.map(s => ({
+        ...s,
+        score: Math.round(s.score * rangeMultiplier),
+        games: Math.max(1, Math.round(s.games * rangeMultiplier))
+      }));
+
+      // Sort
+      students.sort((a,b) => {
+        if (sort === "accuracy") return b.accuracy - a.accuracy;
+        if (sort === "games") return b.games - a.games;
+        return b.score - a.score; // default score
+      });
+
+      // Stats
+      const totalStudents = students.length;
+      const avgScore = Math.round(students.reduce((sum,s)=>sum+s.score,0)/totalStudents);
+      const avgAcc = Math.round(students.reduce((sum,s)=>sum+s.accuracy,0)/totalStudents);
+
+      // Top 5
+      const top5 = students.slice(0,5);
+
+      return { totalStudents, avgScore, avgAcc, top5, classSelect, sort, range };
+    }
+
+    function renderAnalytics(){
+      const a = computeMockAnalytics();
+      document.getElementById("statStudents").textContent = a.totalStudents.toLocaleString();
+      document.getElementById("statAvgScore").textContent = a.avgScore.toLocaleString();
+      document.getElementById("statAvgAcc").textContent = `${a.avgAcc}%`;
+
+      const classes = loadClasses();
+      let classLabel = "All Classes";
+      if (a.classSelect !== "all"){
+        const cls = classes.find(c => c.id === a.classSelect);
+        if (cls) classLabel = `${cls.name} (${cls.code})`;
+      }
+
+      const sortLabel = ({
+        score: "Highest Score",
+        accuracy: "Highest Accuracy",
+        games: "Most Games Played"
+      })[a.sort] ?? "Highest Score";
+
+      const rangeLabel = ({
+        today: "Today",
+        week: "This Week",
+        month: "This Month",
+        all: "All Time"
+      })[a.range] ?? "This Week";
+
+      document.getElementById("mockNote").innerHTML =
+        `Showing <b>mock analytics</b> for <b>${escapeHtml(classLabel)}</b> — <b>${escapeHtml(rangeLabel)}</b> — sorted by <b>${escapeHtml(sortLabel)}</b>.`;
+
+      // Render top 5 list
+      const container = document.getElementById("topStudents");
+      container.innerHTML = "";
+      a.top5.forEach((s, idx) => {
+        const row = document.createElement("div");
+        row.className = "leader-row";
+        row.innerHTML = `
+          <div class="leader-left">
+            <div class="ranknum">${idx + 1}</div>
+            <div class="leader-name">${escapeHtml(s.name)}</div>
+          </div>
+          <div class="leader-score">${s.score.toLocaleString()}</div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // =========================
+    // Event handlers
+    // =========================
+    function wireEvents(){
+      document.getElementById("terminateBtn").addEventListener("click", () => {
+        showToast("Terminate session (placeholder) → redirect to /login");
+      });
+
+      document.getElementById("backToStudentBtn").addEventListener("click", () => {
+        showToast("Student view (placeholder) → open student-dashboard.html");
+        // Later: window.location.href = "student-dashboard.html";
+      });
+
+      document.getElementById("fullReportBtn").addEventListener("click", () => {
+        showToast("Full report (placeholder) → /teacher/report");
+      });
+
+      document.getElementById("createClassBtn").addEventListener("click", () => {
+        const nameInput = document.getElementById("classNameInput");
+        const name = (nameInput.value || "").trim();
+        if (!name){
+          showToast("Please enter a class name.");
+          nameInput.focus();
+          return;
+        }
+
+        const classes = loadClasses();
+        const existingCodes = new Set(classes.map(c => c.code));
+        const code = ensureUniqueCode(existingCodes);
+
+        const newClass = {
+          id: cryptoRandomId(),
+          name,
+          code,
+          studentsCount: 0, // mock for Sprint 2
+          createdAt: new Date().toISOString()
+        };
+
+        classes.unshift(newClass);
+        saveClasses(classes);
+
+        nameInput.value = "";
+        renderClassList();
+        renderClassSelect();
+        renderAnalytics();
+
+        showToast(`Class created: ${name} — Code: ${code}`);
+      });
+
+      document.getElementById("clearClassesBtn").addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        renderClassList();
+        renderClassSelect();
+        renderAnalytics();
+        showToast("Cleared saved classes (localStorage).");
+      });
+
+      // Class list buttons (copy/view)
+      document.getElementById("classList").addEventListener("click", async (e) => {
+        const copyBtn = e.target.closest("[data-copy]");
+        const viewBtn = e.target.closest("[data-view]");
+
+        if (copyBtn){
+          const code = copyBtn.getAttribute("data-copy");
+          try{
+            await navigator.clipboard.writeText(code);
+            showToast(`Copied code: ${code}`);
+          } catch {
+            showToast(`Copy failed — code is: ${code}`);
+          }
+          return;
+        }
+
+        if (viewBtn){
+          const classId = viewBtn.getAttribute("data-view");
+          document.getElementById("classSelect").value = classId;
+          renderAnalytics();
+          showToast("Viewing selected class (mock).");
+          return;
+        }
+      });
+
+      // Filters
+      ["classSelect","sortSelect","rangeSelect"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => {
+          renderAnalytics();
+        });
+      });
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function hashString(str){
+      // Simple deterministic hash for mock variation
+      let h = 0;
+      for (let i = 0; i < str.length; i++){
+        h = (h << 5) - h + str.charCodeAt(i);
+        h |= 0;
+      }
+      return Math.abs(h) + 1;
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function cryptoRandomId(){
+      // Small unique id for front-end demo
+      if (crypto && crypto.getRandomValues){
+        const arr = new Uint32Array(2);
+        crypto.getRandomValues(arr);
+        return `${arr[0].toString(16)}${arr[1].toString(16)}`;
+      }
+      return String(Date.now()) + String(Math.floor(Math.random()*1e9));
+    }
+
+    // =========================
+    // Init
+    // =========================
+    renderTeacher();
+    renderClassList();
+    renderClassSelect();
+    renderAnalytics();
+    wireEvents();
+  </script>
+</body>
+</html>
