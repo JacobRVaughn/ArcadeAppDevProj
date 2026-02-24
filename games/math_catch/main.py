@@ -18,7 +18,6 @@ NEG_VALUES  = [-1, -2, -3, -4, -5]
 BALL_MIN_R = int(18 * 1.3)
 BALL_MAX_R = int(26 * 1.3)
 
-TARGET_MIN, TARGET_MAX = 5, 11
 
 SPAWN_START = 0.85
 SPAWN_MIN = 0.35
@@ -40,12 +39,27 @@ R_FILL, R_STROKE = (248, 113, 113), (220, 38, 38)
 
 LABEL = (11, 27, 58)
 
+EASY_BTN = (34, 197, 94)
+MED_BTN  = (234, 179, 8)
+HARD_BTN = (239, 68, 68)
+BTN_TXT  = (255, 255, 255)
+
 # ---------- Helpers ----------
 def clamp(v, lo, hi):
     return max(lo, min(hi, v))
 
 def new_target():
-    return random.randint(TARGET_MIN, TARGET_MAX)
+    diff = state.get("difficulty")
+
+    if diff == "easy":
+        return random.randint(0, 10)
+    elif diff == "medium":
+        return random.randint(10, 30)
+    elif diff == "hard":
+        return random.randint(30, 100)
+    else:
+        # Fallback (should not normally happen)
+        return random.randint(0, 10)
 
 def circle_rect_collide(cx, cy, r, rx, ry, rw, rh):
     closest_x = clamp(cx, rx, rx + rw)
@@ -97,7 +111,15 @@ def reset_all(state, balls, basket):
     state["spawn_interval"] = SPAWN_START
     state["score"] = 0
     basket["x"] = W / 2 - BASKET_W / 2
-    reset_round(state, balls)
+
+    # Go back to difficulty selection; do not generate a target yet
+    state["phase"] = "difficulty"
+    state["difficulty"] = None
+    state["target"] = 0
+    state["current"] = 0
+    state["countdown"] = 3.0
+    state["spawn_timer"] = 0.0
+    balls.clear()
 
 def complete_round(state, balls):
     state["spawn_interval"] = max(SPAWN_MIN, state["spawn_interval"] - SPAWN_ACCEL)
@@ -130,7 +152,8 @@ font_sub = pygame.font.SysFont("arial", 20)
 
 # ---------- Data ----------
 state = {
-    "phase": "target",
+    "phase": "difficulty",
+    "difficulty": None,
     "target": 0,
     "current": 0,
     "score": 0,
@@ -192,6 +215,42 @@ def draw_center_text(big, small=None):
     if small:
         sm = font_sub.render(small, True, SUB)
         screen.blit(sm, sm.get_rect(center=(W // 2, H // 2 + 26)))
+
+def draw_difficulty_screen():
+    title = font_big.render("Select Difficulty", True, HUD)
+    screen.blit(title, title.get_rect(center=(W // 2, H // 2 - 150)))
+
+    bw, bh = 260, 80
+    gap = 26
+    total_w = bw * 3 + gap * 2
+    start_x = W // 2 - total_w // 2
+    y = H // 2 - bh // 2
+
+    easy_rect = pygame.Rect(start_x, y, bw, bh)
+    med_rect  = pygame.Rect(start_x + bw + gap, y, bw, bh)
+    hard_rect = pygame.Rect(start_x + (bw + gap) * 2, y, bw, bh)
+
+    pygame.draw.rect(screen, EASY_BTN, easy_rect, border_radius=14)
+    pygame.draw.rect(screen, MED_BTN,  med_rect,  border_radius=14)
+    pygame.draw.rect(screen, HARD_BTN, hard_rect, border_radius=14)
+
+    # Optional subtle outline
+    pygame.draw.rect(screen, (0, 0, 0), easy_rect, width=2, border_radius=14)
+    pygame.draw.rect(screen, (0, 0, 0), med_rect,  width=2, border_radius=14)
+    pygame.draw.rect(screen, (0, 0, 0), hard_rect, width=2, border_radius=14)
+
+    easy_txt = font_med.render("Easy", True, BTN_TXT)
+    med_txt  = font_med.render("Medium", True, BTN_TXT)
+    hard_txt = font_med.render("Hard", True, BTN_TXT)
+
+    screen.blit(easy_txt, easy_txt.get_rect(center=easy_rect.center))
+    screen.blit(med_txt,  med_txt.get_rect(center=med_rect.center))
+    screen.blit(hard_txt, hard_txt.get_rect(center=hard_rect.center))
+
+    hint = font_sub.render("Choose one to begin", True, SUB)
+    screen.blit(hint, hint.get_rect(center=(W // 2, H // 2 + 120)))
+
+    return easy_rect, med_rect, hard_rect
 
 def draw_pause_overlay():
     overlay = pygame.Surface((W, H), pygame.SRCALPHA)
@@ -311,7 +370,29 @@ async def main():
                     keys["right"] = False
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if state["phase"] == "target":
+                if state["phase"] == "difficulty":
+                    mx, my = event.pos
+                    # Recompute the same button rects used for drawing
+                    bw, bh = 260, 80
+                    gap = 26
+                    total_w = bw * 3 + gap * 2
+                    start_x = W // 2 - total_w // 2
+                    y = H // 2 - bh // 2
+                    easy_rect = pygame.Rect(start_x, y, bw, bh)
+                    med_rect  = pygame.Rect(start_x + bw + gap, y, bw, bh)
+                    hard_rect = pygame.Rect(start_x + (bw + gap) * 2, y, bw, bh)
+
+                    if easy_rect.collidepoint(mx, my):
+                        state["difficulty"] = "easy"
+                        reset_round(state, balls)
+                    elif med_rect.collidepoint(mx, my):
+                        state["difficulty"] = "medium"
+                        reset_round(state, balls)
+                    elif hard_rect.collidepoint(mx, my):
+                        state["difficulty"] = "hard"
+                        reset_round(state, balls)
+
+                elif state["phase"] == "target":
                     start_countdown(state, balls)
 
         update(dt, keys)
@@ -329,6 +410,9 @@ async def main():
             for b in balls:
                 draw_ball(b)
             draw_hud()
+        elif state["phase"] == "difficulty":
+            # No HUD yet; just the selection screen
+            draw_difficulty_screen()
         elif state["phase"] == "target":
             draw_hud()
             draw_center_text(f"Target: {state['target']}", "Click to start")
