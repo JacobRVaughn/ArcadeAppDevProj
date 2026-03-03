@@ -1,8 +1,51 @@
 import asyncio
 import random
 import pygame
+from pathlib import Path
 
 pygame.init()
+
+# ---------- Audio ----------
+# NOTE: For web builds (pygbag), audio support can vary by browser.
+# This will still work for desktop pygame; if mixer init fails, we disable sounds gracefully.
+SOUNDS_ENABLED = True
+try:
+    pygame.mixer.init()
+    pygame.mixer.set_num_channels(16)  # allow overlapping sounds
+except Exception:
+    SOUNDS_ENABLED = False
+
+_ASSET_DIR = Path(__file__).resolve().parent
+def _load_sound(name: str):
+    if not SOUNDS_ENABLED:
+        return None
+    try:
+        return pygame.mixer.Sound(str(_ASSET_DIR / name))
+    except Exception:
+        return None
+
+SND_NORMAL = _load_sound("catch1.mp3")  # normal
+SND_MULT   = _load_sound("catch2.mp3")  # multiplier
+SND_NEG    = _load_sound("catch3.mp3")  # negative
+
+def play_catch_sound(ball_type: str):
+    if not SOUNDS_ENABLED:
+        return
+    snd = None
+    if ball_type == "mult":
+        snd = SND_MULT
+    elif ball_type == "neg":
+        snd = SND_NEG
+    else:
+        snd = SND_NORMAL
+
+    if snd is None:
+        return
+    # Sound.play() uses the first available channel; with multiple channels it can overlap.
+    try:
+        snd.play()
+    except Exception:
+        pass
 
 # ---------- Config ----------
 W, H = 900, 600
@@ -30,6 +73,7 @@ NEG_CHANCE  = 0.15
 BG = (16, 42, 90)
 HUD = (215, 230, 255)
 SUB = (161, 161, 170)
+WARN = (248, 113, 113)
 
 ORANGE = (255, 122, 24)
 
@@ -79,6 +123,47 @@ class Ball:
         self.value = value
         self.type = ball_type  # "normal" | "mult" | "neg"
 
+class PopText:
+    __slots__ = ("x", "y", "text", "age", "duration", "base_alpha")
+    def __init__(self, x, y, text, duration=0.6, base_alpha=128):
+        self.x = x
+        self.y = y
+        self.text = text
+        self.age = 0.0
+        self.duration = duration
+        self.base_alpha = base_alpha
+
+    def update(self, dt):
+        self.age += dt
+        # float up slightly
+        self.y -= 45.0 * dt
+
+    def alive(self):
+        return self.age < self.duration
+
+    def draw(self, surface):
+        t = self.age / self.duration
+        if t < 0.0:
+            t = 0.0
+        if t > 1.0:
+            t = 1.0
+
+        # Grow from 1.0x to ~2.0x
+        scale = 1.0 + 1.0 * t
+
+        # Fade out from 50% opacity to 0
+        alpha = int(self.base_alpha * (1.0 - t))
+
+        txt_surf = font_pop.render(self.text, True, (255, 255, 255))
+        txt_surf.set_alpha(alpha)
+
+        w, h = txt_surf.get_size()
+        sw, sh = max(1, int(w * scale)), max(1, int(h * scale))
+        txt_surf = pygame.transform.smoothscale(txt_surf, (sw, sh))
+
+        rect = txt_surf.get_rect(center=(int(self.x), int(self.y)))
+        surface.blit(txt_surf, rect)
+
 def spawn_ball(balls):
     r = random.randint(BALL_MIN_R, BALL_MAX_R)
     roll = random.random()
@@ -105,7 +190,9 @@ def reset_round(state, balls):
     state["current"] = 0
     state["countdown"] = 3.0
     state["spawn_timer"] = 0.0
+    state["warn_blink_t"] = 0.0
     balls.clear()
+    pop_texts.clear()
 
 def reset_all(state, balls, basket):
     state["spawn_interval"] = SPAWN_START
@@ -119,7 +206,9 @@ def reset_all(state, balls, basket):
     state["current"] = 0
     state["countdown"] = 3.0
     state["spawn_timer"] = 0.0
+    state["warn_blink_t"] = 0.0
     balls.clear()
+    pop_texts.clear()
 
 def complete_round(state, balls):
     state["spawn_interval"] = max(SPAWN_MIN, state["spawn_interval"] - SPAWN_ACCEL)
@@ -129,7 +218,9 @@ def start_countdown(state, balls):
     state["phase"] = "countdown"
     state["countdown"] = 3.0
     state["spawn_timer"] = 0.0
+    state["warn_blink_t"] = 0.0
     balls.clear()
+    pop_texts.clear()
 
 def toggle_pause(state):
     if state["phase"] == "play":
@@ -149,6 +240,7 @@ font_big = pygame.font.SysFont("arial", 56, bold=True)
 font_med = pygame.font.SysFont("arial", 32, bold=True)
 font_count = pygame.font.SysFont("arial", 96, bold=True)
 font_sub = pygame.font.SysFont("arial", 20)
+font_pop = pygame.font.SysFont("arial", 40, bold=True)
 
 # ---------- Data ----------
 state = {
@@ -159,9 +251,11 @@ state = {
     "score": 0,
     "countdown": 3.0,
     "spawn_timer": 0.0,
+    "warn_blink_t": 0.0,
     "spawn_interval": SPAWN_START,
 }
 balls = []
+pop_texts = []
 
 basket = {
     "x": W / 2 - BASKET_W / 2,
@@ -208,6 +302,21 @@ def draw_hud():
     # score top-right
     s = font_hud.render(f"Score: {state['score']}", True, HUD)
     screen.blit(s, s.get_rect(topright=(W - 16, 10)))
+    
+def draw_blink_warning_if_needed():
+    if state["target"] <= 0:
+        return
+    if state["current"] < 3 * state["target"]:
+        return
+
+    # Blink ~2 times per second
+    blink_on = (int(state.get("warn_blink_t", 0.0) * 4) % 2) == 0
+    if not blink_on:
+        return
+
+    msg = "WARNING: NUMBER IS GETTING TOO BIG"
+    txt = font_sub.render(msg, True, WARN)
+    screen.blit(txt, txt.get_rect(midtop=(W // 2, 34)))
 
 def draw_center_text(big, small=None):
     b = font_big.render(big, True, HUD)
@@ -285,6 +394,13 @@ def update(dt, keys):
     if state["phase"] == "paused":
         return
 
+    state["warn_blink_t"] = state.get("warn_blink_t", 0.0) + dt
+    # Update pop text effects regardless of phase (except paused)
+    for i in range(len(pop_texts) - 1, -1, -1):
+        pop_texts[i].update(dt)
+        if not pop_texts[i].alive():
+            pop_texts.pop(i)
+
     # move basket (even on target/countdown to match your JS feel)
     vx = 0.0
     if keys["left"]:
@@ -327,13 +443,32 @@ def update(dt, keys):
 
             state["score"] += 100
 
+            play_catch_sound(b.type)
+
+            # Pop text effect (e.g., "+5" grows then fades)
+            if b.type == "mult":
+                pop_label = f"x{b.value}"
+            else:
+                pop_label = f"+{b.value}" if b.value > 0 else str(b.value)
+
+            pop_texts.append(PopText(b.x, basket["y"], pop_label))
+
             if state["current"] < 0:
                 state["current"] = 0
 
             balls.pop(i)
 
+            # Losing condition: current number reaches 5× target
+            if state["current"] >= 5 * state["target"] and state["target"] > 0:
+                state["score"] = 0
+                state["phase"] = "game_over"
+                balls.clear()
+                return
+
             if state["current"] == state["target"]:
-                complete_round(state, balls)
+                state["phase"] = "win"
+                balls.clear()
+                return
             continue
 
         # missed
@@ -370,6 +505,9 @@ async def main():
                     keys["right"] = False
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if state["phase"] in ("game_over", "win"):
+                    reset_all(state, balls, basket)
+                    continue
                 if state["phase"] == "difficulty":
                     mx, my = event.pos
                     # Recompute the same button rects used for drawing
@@ -400,22 +538,40 @@ async def main():
         # render
         draw_background()
         draw_basket()
+        for p in pop_texts:
+            p.draw(screen)
 
         if state["phase"] == "paused":
             draw_hud()
             for b in balls:
                 draw_ball(b)  # shows frozen balls
             draw_pause_overlay()
+            draw_blink_warning_if_needed()
         elif state["phase"] == "play":
             for b in balls:
                 draw_ball(b)
             draw_hud()
+            draw_blink_warning_if_needed()
+        elif state["phase"] == "game_over":
+            draw_hud()
+            draw_center_text("Game Over", "Press R to restart")
+        elif state["phase"] == "win":
+            draw_hud()
+            draw_center_text("Congratulations!", "Press R or click to replay")
         elif state["phase"] == "difficulty":
             # No HUD yet; just the selection screen
             draw_difficulty_screen()
         elif state["phase"] == "target":
             draw_hud()
-            draw_center_text(f"Target: {state['target']}", "Click to start")
+
+            big = font_big.render(f"Target: {state['target']}", True, HUD)
+            screen.blit(big, big.get_rect(center=(W // 2, H // 2 - 70)))
+
+            small = font_sub.render("Click to start", True, SUB)
+            screen.blit(small, small.get_rect(center=(W // 2, H // 2 + 10)))
+
+            warn = font_sub.render("Don't let the number grow big!", True, WARN)
+            screen.blit(warn, warn.get_rect(center=(W // 2, H // 2 + 44)))
         elif state["phase"] == "countdown":
             draw_hud()
             draw_countdown()
