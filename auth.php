@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             } elseif ($result['role'] === 'admin') {
                 header("Location: admin_dashboard.php", true, 302);
             } else {
-                header("Location: student-dashboard.html", true, 302);
+                header("Location: student-dashboard.php", true, 302);
             }
             exit;
         } else {
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             } elseif ($role === 'admin') {
                 header("Location: admin_dashboard.php", true, 302);
             } else {
-                header("Location: student-dashboard.html", true, 302);
+                header("Location: student-dashboard.php", true, 302);
             }
             exit;
         } else {

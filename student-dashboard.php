@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role'] !== 'student') {
+    header("Location: login.html", true, 302);
+    exit;
+}
+?>
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -409,7 +418,7 @@
 
 
     document.getElementById("terminateBtn").addEventListener("click", () => {
-      window.location.href = "login.html";
+      window.location.href = "logout.php";
     });
     document.getElementById("profileBtn").addEventListener("click", () => { showToast("View profile → placeholder"); });
     document.getElementById("settingsBtn").addEventListener("click", () => { showToast("Settings → placeholder"); });
