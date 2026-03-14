@@ -6,25 +6,25 @@ function loginUser($email, $password) {
     try {
         global $conn;
 
-        $stmt = $conn->prepare("SELECT password FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-
         $row = $result->fetch_assoc();
 
         if (!isset($row) || empty($row)) {
-            return 'no user matches';
+            return ['status' => 'no user matches'];
         }
 
         if (password_verify($password, $row['password'])) {
-            return 'success';
+            return ['status' => 'success', 'username' => $row['username'], 'id' => $row['id'], 'role' => $row['role']];
         } else {
-            return 'failure pass does not match';
+            return ['status' => 'failure pass does not match'];
         }
 
     } catch (Exception $e) {
         error_log($e->getMessage());
+        return ['status' => 'error'];
     }
 }
 
