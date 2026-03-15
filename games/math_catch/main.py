@@ -24,9 +24,9 @@ def _load_sound(name: str):
     except Exception:
         return None
 
-SND_NORMAL = _load_sound("catch1.mp3")  # normal
-SND_MULT   = _load_sound("catch2.mp3")  # multiplier
-SND_NEG    = _load_sound("catch3.mp3")  # negative
+SND_NORMAL = _load_sound("catch1.ogg")  # normal
+SND_MULT   = _load_sound("catch2.ogg")  # multiplier
+SND_NEG    = _load_sound("catch3.ogg")  # negative
 
 def play_catch_sound(ball_type: str):
     if not SOUNDS_ENABLED:
@@ -395,13 +395,11 @@ def update(dt, keys):
         return
 
     state["warn_blink_t"] = state.get("warn_blink_t", 0.0) + dt
-    # Update pop text effects regardless of phase (except paused)
     for i in range(len(pop_texts) - 1, -1, -1):
         pop_texts[i].update(dt)
         if not pop_texts[i].alive():
             pop_texts.pop(i)
 
-    # move basket (even on target/countdown to match your JS feel)
     vx = 0.0
     if keys["left"]:
         vx -= BASKET_SPEED
