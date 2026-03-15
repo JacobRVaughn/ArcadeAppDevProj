@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role'] !== 'student') {
+    header("Location: login.html", true, 302);
+    exit;
+}
+?>
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -201,7 +210,7 @@
       <div class="logo">EA</div>
       <div>
         <h1>EDUQUEST ARCADE</h1>
-        <p class="muted">Student Dashboard (Sprint 1 prototype)</p>
+        <p class="muted">Student Dashboard (Sprint 3 prototype)</p>
       </div>
     </div>
     <button class="btn" id="terminateBtn">TERMINATE SESSION</button>
@@ -289,54 +298,26 @@
   <div class="toast" id="toast">Placeholder</div>
 
   <script>
-    // ---- Placeholder data (swap later with API results) ----
-    const student = {
-      username: "Cadet User",
-      avatarUrl: "", // e.g. "assets/avatar.png" or "https://..."
-      xp: 1450,
-      points: 980,
-      accuracy: 88
-    };
+    // ---- Fetch real data from get_student_data.php ----
+    async function loadDashboard() {
+      try {
+        const res = await fetch("get_student_data.php");
+        const data = await res.json();
 
-    const missions = [
-      {
-        id: "math-core",
-        icon: "📘",
-        title: "Mathematics Core",
-        desc: "Practice equations & quick mental math.",
-        sector: "Sector 1",
-        rewards: "Rewards: 300 XP"
-      },
-      {
-        id: "bio-science",
-        icon: "🧪",
-        title: "Biological Sciences",
-        desc: "Cells, genetics, and bio fundamentals.",
-        sector: "Sector 2",
-        rewards: "Rewards: 300 XP"
-      },
-      {
-        id: "struct-eng",
-        icon: "⚙️",
-        title: "Structural Engineering",
-        desc: "Logic puzzles and engineering basics.",
-        sector: "Sector 3",
-        rewards: "Rewards: 300 XP"
+        if (data.error) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        renderProfile(data.student);
+        renderMiniLeaderboard(data.topFive);
+      } catch (e) {
+        console.error("Failed to load dashboard data", e);
       }
-    ];
-
-    const topFive = [
-      { username: "Cadet_Zephyr", score: 3240 },
-      { username: "Nova_Prime", score: 2980 },
-      { username: "Quantum_Leap", score: 2710 },
-      { username: "Star_Dust", score: 2555 },
-      { username: "You", score: 980 }
-    ];
-
-    // ---- XP -> level/rank (demo logic) ----
-    function getLevel(xp) {
-      return Math.floor(xp / 1000) + 1;
     }
+
+    // ---- XP -> level/rank ----
+    function getLevel(xp) { return Math.floor(xp / 1000) + 1; }
     function getRankTitle(level) {
       if (level >= 7) return "Elite Cadet";
       if (level >= 5) return "Senior Cadet";
@@ -344,42 +325,38 @@
       return "Junior Cadet";
     }
 
-    // ---- Render profile ----
-    function renderProfile() {
-      const level = getLevel(student.xp);
-      const rankTitle = getRankTitle(level);
+    // ---- Render profile (now accepts student param) ----
+    function renderProfile(student) {
+      const level    = getLevel(student.xp);
       const progress = student.xp % 1000;
-      const pct = Math.round((progress / 1000) * 100);
+      const pct      = Math.round((progress / 1000) * 100);
 
-      document.getElementById("username").textContent = student.username;
-      document.getElementById("rankTitle").textContent = rankTitle;
+      document.getElementById("username").textContent  = student.username;
+      document.getElementById("rankTitle").textContent = getRankTitle(level);
       document.getElementById("levelText").textContent = `Level ${level}`;
-      document.getElementById("xpText").textContent = `${student.xp} XP`;
-      document.getElementById("xpFoot").textContent = `${progress}/1000 XP to next level`;
-      document.getElementById("points").textContent = student.points.toLocaleString();
-      document.getElementById("accuracy").textContent = `${student.accuracy}%`;
+      document.getElementById("xpText").textContent    = `${student.xp} XP`;
+      document.getElementById("xpFoot").textContent    = `${progress}/1000 XP to next level`;
+      document.getElementById("points").textContent    = student.points.toLocaleString();
+      document.getElementById("accuracy").textContent  = `${student.accuracy}%`;
 
-      // Avatar
       const initials = student.username.split(" ").slice(0,2).map(w => (w[0]||"").toUpperCase()).join("");
-      const avatarBox = document.getElementById("avatarBox");
-      const initialsEl = document.getElementById("initials");
-      initialsEl.textContent = initials || "CU";
+      document.getElementById("initials").textContent = initials || "CU";
 
-      if (student.avatarUrl) {
-        avatarBox.innerHTML = `<img src="${student.avatarUrl}" alt="Student avatar" />`;
-      }
-
-      // Progress bar
       requestAnimationFrame(() => {
         document.getElementById("xpFill").style.width = `${pct}%`;
       });
     }
 
-    // ---- Render missions ----
+    // ---- Missions remain static (no DB table yet) ----
+    const missions = [
+      { id:"math-core",   icon:"📘", title:"Mathematics Core",        desc:"Practice equations & quick mental math.", sector:"Sector 1", rewards:"Rewards: 300 XP" },
+      { id:"bio-science", icon:"🧪", title:"Biological Sciences",     desc:"Cells, genetics, and bio fundamentals.",  sector:"Sector 2", rewards:"Rewards: 300 XP" },
+      { id:"struct-eng",  icon:"⚙️", title:"Structural Engineering",  desc:"Logic puzzles and engineering basics.",   sector:"Sector 3", rewards:"Rewards: 300 XP" }
+    ];
+
     function renderMissions() {
       const container = document.getElementById("missions");
       container.innerHTML = "";
-
       missions.forEach(m => {
         const el = document.createElement("div");
         el.className = "mission";
@@ -399,22 +376,25 @@
         `;
         container.appendChild(el);
       });
-
       container.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-play]");
         if (!btn) return;
-        const gameId = btn.getAttribute("data-play");
-        showToast(`Play clicked → /student/games/${gameId} (placeholder)`);
-        // Later: window.location.href = `/student/games/${gameId}.html`;
+        showToast(`Launching ${btn.getAttribute("data-play")}...`);
       }, { once: true });
     }
 
-    // ---- Render mini leaderboard ----
-    function renderMiniLeaderboard() {
+    // ---- Render mini leaderboard (now accepts topFive param) ----
+    function renderMiniLeaderboard(topFive) {
       const container = document.getElementById("miniLeaderboard");
       container.innerHTML = "";
 
-      topFive.slice(0,5).forEach((p, i) => {
+      // Add empty state fallback
+      if (!topFive || topFive.length === 0) {
+        container.innerHTML = `<p style="color:var(--muted2);font-size:13px">No leaderboard data yet.</p>`;
+        return;
+      }
+
+      topFive.slice(0, 5).forEach((p, i) => {
         const row = document.createElement("div");
         row.className = "leader-row";
         row.innerHTML = `
@@ -428,8 +408,7 @@
       });
     }
 
-    // ---- Placeholder navigation / actions ----
-    function showToast(msg){
+    function showToast(msg) {
       const t = document.getElementById("toast");
       t.textContent = msg;
       t.classList.add("show");
@@ -437,31 +416,20 @@
       window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
     }
 
+
     document.getElementById("terminateBtn").addEventListener("click", () => {
-      showToast("Terminate session (placeholder) → redirect to /login");
-      // Later: clear token/session + window.location.href = "/login.html";
+      window.location.href = "logout.php";
     });
-
-    document.getElementById("profileBtn").addEventListener("click", () => {
-      showToast("View profile (placeholder) → /student/profile");
-    });
-
-    document.getElementById("settingsBtn").addEventListener("click", () => {
-      showToast("Settings (placeholder) → /student/settings");
-    });
-
-    document.getElementById("allGamesBtn").addEventListener("click", () => {
-      showToast("All games (placeholder) → /student/games");
-    });
-
+    document.getElementById("profileBtn").addEventListener("click", () => { showToast("View profile → placeholder"); });
+    document.getElementById("settingsBtn").addEventListener("click", () => { showToast("Settings → placeholder"); });
+    document.getElementById("allGamesBtn").addEventListener("click", () => { showToast("All games → placeholder"); });
     document.getElementById("fullLeaderboardBtn").addEventListener("click", () => {
-      showToast("Leaderboard (placeholder) → /student/leaderboard");
+      window.location.href = "leaderboard.html";
     });
 
     // ---- Init ----
-    renderProfile();
+    loadDashboard();
     renderMissions();
-    renderMiniLeaderboard();
   </script>
 </body>
 </html>
