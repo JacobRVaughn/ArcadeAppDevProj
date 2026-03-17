@@ -347,11 +347,11 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role
       });
     }
 
-    // ---- Missions remain static (no DB table yet) ----
+    // ---- Missions ----
     const missions = [
-      { id:"math-core",   icon:"📘", title:"Mathematics Core",        desc:"Practice equations & quick mental math.", sector:"Sector 1", rewards:"Rewards: 300 XP" },
-      { id:"bio-science", icon:"🧪", title:"Biological Sciences",     desc:"Cells, genetics, and bio fundamentals.",  sector:"Sector 2", rewards:"Rewards: 300 XP" },
-      { id:"struct-eng",  icon:"⚙️", title:"Structural Engineering",  desc:"Logic puzzles and engineering basics.",   sector:"Sector 3", rewards:"Rewards: 300 XP" }
+      { id:"math-catch", icon:"🎮", title:"Math Catch", desc:"Catch the correct answers and sharpen your mental math skills.", sector:"Sector 1", rewards:"Rewards: 300 XP", url:"games/math_catch/build/web/index.html" },
+      { id:"bio-science", icon:"🧪", title:"Biological Sciences", desc:"Cells, genetics, and bio fundamentals.", sector:"Sector 2", rewards:"Rewards: 300 XP", url:"" },
+      { id:"struct-eng",  icon:"⚙️", title:"Structural Engineering", desc:"Logic puzzles and engineering basics.", sector:"Sector 3", rewards:"Rewards: 300 XP", url:"" }
     ];
 
     function renderMissions() {
@@ -372,15 +372,20 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role
               </div>
             </div>
           </div>
-          <button class="btn primary" data-play="${m.id}">PLAY</button>
+          <button class="btn primary" data-play="${m.id}" data-url="${m.url}" ${!m.url ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>PLAY</button>
         `;
         container.appendChild(el);
       });
       container.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-play]");
-        if (!btn) return;
-        showToast(`Launching ${btn.getAttribute("data-play")}...`);
-      }, { once: true });
+        if (!btn || btn.disabled) return;
+        const url = btn.getAttribute("data-url");
+        if (url) {
+          window.location.href = url;
+        } else {
+          showToast("This mission is not available yet.");
+        }
+      });
     }
 
     // ---- Render mini leaderboard (now accepts topFive param) ----
@@ -422,7 +427,10 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role
     });
     document.getElementById("profileBtn").addEventListener("click", () => { showToast("View profile → placeholder"); });
     document.getElementById("settingsBtn").addEventListener("click", () => { showToast("Settings → placeholder"); });
-    document.getElementById("allGamesBtn").addEventListener("click", () => { showToast("All games → placeholder"); });
+    document.getElementById("allGamesBtn").addEventListener("click", () => {
+      window.location.href = "lobby.html";
+    });
+
     document.getElementById("fullLeaderboardBtn").addEventListener("click", () => {
       window.location.href = "leaderboard.html";
     });
