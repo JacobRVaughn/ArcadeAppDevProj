@@ -22,9 +22,11 @@
 
         <!-- Game Type Selection -->
         <div class="tabs">
-            <!-- One type for now -->
-            <button class="tab active" id="catchStars" onclick="goToGame(event)">
+            <button class="tab active" id="catchStars" onclick="goToGame(event, 'math_catch')">
                 Math Catch
+            </button>
+            <button class="tab" id="readingQuest" onclick="goToGame(event, 'reading_quest')">
+                Word Blitz
             </button>
         </div>
 
@@ -34,10 +36,9 @@
 </div>
 
 <script>
-    function goToGame(event) {
+    function goToGame(event, game) {
         event.preventDefault();
-        window.location.href = "games/math_catch/build/web/index.html";
-        //window.location.href = "http://localhost:8000/";
+        window.location.href = `games/${game}/build/web/index.html`;
     }
 </script>
 
