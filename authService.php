@@ -13,27 +13,26 @@ function loginUser($email, $password) {
         $row = $result->fetch_assoc();
 
         if (!isset($row) || empty($row)) {
-            return ['status' => 'no user matches'];
+            return ['status' => 'error', 'message' => 'No account found with that email address.'];
         }
 
         if (password_verify($password, $row['password'])) {
             return ['status' => 'success', 'username' => $row['username'], 'id' => $row['id'], 'role' => $row['role']];
         } else {
-            return ['status' => 'failure pass does not match'];
+            return ['status' => 'error', 'message' => 'Incorrect password. Please try again.'];
         }
 
     } catch (Exception $e) {
         error_log($e->getMessage());
-        return ['status' => 'error'];
+        return ['status' => 'error', 'message' => 'Something went wrong. Please try again.'];
     }
 }
 
-//Create db user table entry for a new user
-function signupUser($username,$email,$password,$role) {
+function signupUser($username, $email, $password, $role) {
     global $conn;
 
     if (checkExistingAcc($email, $username)) {
-        return 'account for username or email already exist';
+        return 'An account with that email or username already exists.';
     }
 
     $hashedPass = password_hash($password, PASSWORD_DEFAULT);
@@ -45,9 +44,8 @@ function signupUser($username,$email,$password,$role) {
     if ($stmt->affected_rows > 0) {
         return 'success';
     } else {
-        return 'sql error has occured';
+        return 'A database error occurred. Please try again.';
     }
-    
 }
 
 // Each account needs a unique username and email no duplicates 

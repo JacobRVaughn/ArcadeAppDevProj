@@ -1,8 +1,10 @@
 <?php
 include 'authService.php';
 session_start();
+header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
     if (isset($_POST['login_submit'])) {
         $email    = trim($_POST["login_email"]);
         $password = trim($_POST["login_password"]);
@@ -15,21 +17,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['role']      = $result['role'];
             $_SESSION['logged_in'] = true;
 
-            // Redirect based on role
+            // Return redirect URL based on role
             if ($result['role'] === 'teacher') {
-                header("Location: teacherdashboard.html", true, 302);
+                $redirect = 'teacherdashboard.html';
             } elseif ($result['role'] === 'admin') {
-                header("Location: admin_dashboard.php", true, 302);
+                $redirect = 'admin_dashboard.php';
             } else {
-                header("Location: student-dashboard.php", true, 302);
+                $redirect = 'student-dashboard.php';
             }
-            exit;
+
+            echo json_encode([
+                'status'   => 'success',
+                'message'  => 'Welcome back, ' . htmlspecialchars($result['username']) . '!',
+                'redirect' => $redirect
+            ]);
+
         } else {
-            echo $result['status'];
+            echo json_encode([
+                'status'  => 'error',
+                'message' => $result['message'] ?? 'Invalid email or password. Please try again.'
+            ]);
         }
+        exit;
 
     } elseif (isset($_POST['signup_submit'])) {
-        // ...existing code...
         $signup_username = trim($_POST["signup_username"]);
         $signup_email    = trim($_POST["signup_email"]);
         $signup_password = trim($_POST["signup_password"]);
@@ -37,36 +48,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $role            = $_POST["role"];
 
         if ($signup_password !== $signup_confirm) {
-            echo "passwords do not match";
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Passwords do not match. Please try again.'
+            ]);
             exit;
         }
 
         $result = signupUser($signup_username, $signup_email, $signup_password, $role);
 
         if ($result === 'success') {
-            $conn = new mysqli("localhost", "root", "", "arcade_db");
-            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->bind_param("s", $signup_email);
-            $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
+            // Log the user in immediately after signup
+            $loginResult = loginUser($signup_email, $signup_password);
 
-            $_SESSION['username']  = $signup_username;
-            $_SESSION['user_id']   = $row['id'] ?? null;
-            $_SESSION['role']      = $role;
-            $_SESSION['logged_in'] = true;
+            if ($loginResult['status'] === 'success') {
+                $_SESSION['username']  = $loginResult['username'];
+                $_SESSION['user_id']   = $loginResult['id'];
+                $_SESSION['role']      = $loginResult['role'];
+                $_SESSION['logged_in'] = true;
 
-            // Redirect based on role (same as login)
-            if ($role === 'teacher') {
-                header("Location: teacherdashboard.html", true, 302);
-            } elseif ($role === 'admin') {
-                header("Location: admin_dashboard.php", true, 302);
+                if ($loginResult['role'] === 'teacher') {
+                    $redirect = 'teacherdashboard.html';
+                } elseif ($loginResult['role'] === 'admin') {
+                    $redirect = 'admin_dashboard.php';
+                } else {
+                    $redirect = 'student-dashboard.php';
+                }
+
+                echo json_encode([
+                    'status'   => 'success',
+                    'message'  => 'Account created! Welcome, ' . htmlspecialchars($loginResult['username']) . '!',
+                    'redirect' => $redirect
+                ]);
             } else {
-                header("Location: student-dashboard.php", true, 302);
+                // Signup worked but auto-login failed, send to login page
+                echo json_encode([
+                    'status'   => 'success',
+                    'message'  => 'Account created successfully! Please sign in.',
+                    'redirect' => null
+                ]);
             }
-            exit;
         } else {
-            echo $result;
+            echo json_encode([
+                'status'  => 'error',
+                'message' => $result ?? 'Sign up failed. Please try again.'
+            ]);
         }
+        exit;
     }
 }
 ?>
