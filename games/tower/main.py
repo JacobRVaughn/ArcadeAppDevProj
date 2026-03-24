@@ -1382,6 +1382,8 @@ class Game:
         # catches any stragglers marked dead by towers / reached_end above
         self.enemies = [e for e in self.enemies if e.alive and not e.reached_end]
         self.projs   = [p for p in self.projs  if p.alive]
+        for f in self.floats:
+            f.update()
         self.floats  = [f for f in self.floats  if f.life > 0]
 
 
