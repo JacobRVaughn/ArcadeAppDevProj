@@ -38,16 +38,16 @@ QUESTIONS = [
     {"prompt": "Zap the sight word: where you live",              "correct": "home",   "wrong": ["some", "come", "dome"]},
 
     # CVC words
-    {"prompt": "Zap the CVC word: a pet that says 'meow'",        "correct": "cat",    "wrong": ["bat", "hat", "rat"]},
-    {"prompt": "Zap the CVC word: opposite of 'cold'",            "correct": "hot",    "wrong": ["hop", "hog", "hob"]},
-    {"prompt": "Zap the CVC word: a baby dog",                    "correct": "pup",    "wrong": ["pub", "bud", "bug"]},
-    {"prompt": "Zap the CVC word: what you sit on",               "correct": "mat",    "wrong": ["man", "map", "mad"]},
-    {"prompt": "Zap the CVC word: a flying animal",               "correct": "bat",    "wrong": ["bad", "ban", "bag"]},
-    {"prompt": "Zap the CVC word: used to cut",                   "correct": "axe",    "wrong": ["age", "ace", "ape"]},
-    {"prompt": "Zap the CVC word: a container for fish",          "correct": "tub",    "wrong": ["rub", "sub", "hub"]},
-    {"prompt": "Zap the CVC word: a round toy",                   "correct": "ball",   "wrong": ["tall", "call", "fall"]},
-    {"prompt": "Zap the CVC word: what light does",               "correct": "lit",    "wrong": ["bit", "fit", "hit"]},
-    {"prompt": "Zap the CVC word: you do this in bed",            "correct": "nap",    "wrong": ["lap", "tap", "cap"]},
+    {"prompt": "Zap the word: a pet that says 'meow'",        "correct": "cat",    "wrong": ["bat", "hat", "rat"]},
+    {"prompt": "Zap the word: opposite of 'cold'",            "correct": "hot",    "wrong": ["hop", "hog", "hob"]},
+    {"prompt": "Zap the word: a baby dog",                    "correct": "pup",    "wrong": ["pub", "bud", "bug"]},
+    {"prompt": "Zap the word: what you sit on",               "correct": "mat",    "wrong": ["man", "map", "mad"]},
+    {"prompt": "Zap the word: a flying animal",               "correct": "bat",    "wrong": ["bad", "ban", "bag"]},
+    {"prompt": "Zap the word: used to cut",                   "correct": "axe",    "wrong": ["age", "ace", "ape"]},
+    {"prompt": "Zap the word: a container for fish",          "correct": "tub",    "wrong": ["rub", "sub", "hub"]},
+    {"prompt": "Zap the word: a round toy",                   "correct": "ball",   "wrong": ["tall", "call", "fall"]},
+    {"prompt": "Zap the word: what light does",               "correct": "lit",    "wrong": ["bit", "fit", "hit"]},
+    {"prompt": "Zap the word: you do this in bed",            "correct": "nap",    "wrong": ["lap", "tap", "cap"]},
 ]
 
 # ── Stars (background) ────────────────────────────────────
