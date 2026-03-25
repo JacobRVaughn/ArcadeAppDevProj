@@ -11,6 +11,12 @@ import math
 import random
 import sys
 
+try:
+    import platform
+    _WEB = True
+except ImportError:
+    _WEB = False
+
 # --- Constants ---
 SCREEN_W, SCREEN_H = 960, 640
 FPS = 60
@@ -1158,6 +1164,7 @@ class Game:
         self.correct_count  = 0
         self.wrong_count    = 0
         self._bg_anim       = 0
+        self._xp_fired      = False   # ensures overlay triggers only once
 
     def _make_bg(self):
         surf = pygame.Surface((SCREEN_W, SCREEN_H))
@@ -1192,6 +1199,51 @@ class Game:
         # Right panel background
         pygame.draw.rect(surf, DARK_B, (TILE * 16, 0, SCREEN_W - TILE * 16, SCREEN_H))
         return surf
+
+    # ── XP Overlay Bridge ───────────────────────────────────────────────────
+
+    def _trigger_xp_overlay(self, won: bool):
+        """Fire the JS game-over XP overlay exactly once via pygbag's window bridge."""
+        if self._xp_fired:
+            return
+        self._xp_fired = True
+
+        # XP reward: 300 for a win, 100 for a loss (adjust as you like)
+        xp_earned = 300 if won else 100
+
+        try:
+            from platform import window  # pygbag injects this in the browser
+            js_code = f"""
+(function() {{
+  var score   = {self.score};
+  var xp      = {xp_earned};
+  var gameId  = "math-kingdom";
+  // Use top-level window so the overlay renders above the iframe
+  var targetWin = window.top || window;
+  var targetDoc = targetWin.document;
+
+  function runOverlay() {{
+    if (typeof targetWin.showGameOverXP === "function") {{
+      targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+    }} else {{
+      if (!targetDoc.getElementById("xpo-script")) {{
+        var s = targetDoc.createElement("script");
+        s.id  = "xpo-script";
+        s.src = "/ArcadeAppDevProj/game-over-xp.js";
+        s.onload = function() {{
+          targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+        }};
+        targetDoc.head.appendChild(s);
+      }}
+    }}
+  }}
+  runOverlay();
+}})();
+"""
+            window.eval(js_code)
+        except Exception as e:
+            # Running locally without pygbag — silently skip
+            print(f"[XP overlay] not in browser, skipped. ({e})")
 
     # ── Wave Logic ──────────────────────────────────────────────────────────
 
@@ -1244,6 +1296,7 @@ class Game:
 
             if self.wave >= self.max_waves:
                 self.state = "win"
+                self._trigger_xp_overlay(won=True)
             else:
                 self.gold += bonus
                 self.floats.append(           # <-- was self.floating_texts (wrong name)
@@ -1367,6 +1420,7 @@ class Game:
                 if self.lives <= 0:
                     self.lives = 0
                     self.state = "game_over"
+                    self._trigger_xp_overlay(won=False)
 
         # Award gold for killed enemies
         for e in self.enemies:
