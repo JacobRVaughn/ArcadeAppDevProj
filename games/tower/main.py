@@ -825,6 +825,261 @@ def draw_ghost(surf, cx, cy, s, wobble, slow_tint=False, hp_frac=1.0):
     pygame.draw.rect(surf, BLACK, (cx - s, cy - s - 10, bar_w, 5), 1)
 
 
+# ─── Tower Art Functions ────────────────────────────────────────────────────
+
+def draw_tower_number(surf, cx, cy, anim, level):
+    """
+    Mage Tower — stout stone turret with a glowing blue orb on top.
+    Level 1: plain orb. Level 2: orbit ring. Level 3: twin sparks + bigger orb.
+    """
+    t = anim
+
+    # ── Stone base (thick round tower body) ──────────────────────────────────
+    base_w, base_h = 30, 26
+    # Shadow
+    pygame.draw.ellipse(surf, (10, 10, 20),
+                        (cx - base_w//2 + 3, cy - base_h//2 + 5, base_w, base_h))
+    # Main stone cylinder
+    pygame.draw.ellipse(surf, CASTLE_DARK,
+                        (cx - base_w//2, cy - base_h//2, base_w, base_h))
+    pygame.draw.ellipse(surf, CASTLE_STONE,
+                        (cx - base_w//2, cy - base_h//2 - 4, base_w, base_h))
+    # Stone highlight stripe
+    pygame.draw.line(surf, CASTLE_LIGHT,
+                     (cx - base_w//2 + 4, cy - base_h//2 - 4),
+                     (cx - base_w//2 + 4, cy + base_h//2 - 6), 2)
+
+    # ── Battlements (3 merlons on top) ───────────────────────────────────────
+    merlon_y = cy - base_h//2 - 6
+    for mx_off in [-9, 0, 9]:
+        pygame.draw.rect(surf, CASTLE_DARK,
+                         (cx + mx_off - 4, merlon_y + 2, 8, 8), border_radius=2)
+        pygame.draw.rect(surf, CASTLE_STONE,
+                         (cx + mx_off - 4, merlon_y, 8, 8), border_radius=2)
+        pygame.draw.rect(surf, CASTLE_LIGHT,
+                         (cx + mx_off - 4, merlon_y, 2, 8))
+
+    # ── Arrow slit window ─────────────────────────────────────────────────────
+    pygame.draw.rect(surf, CASTLE_GATE,
+                     (cx - 3, cy - 4, 6, 10), border_radius=2)
+    pygame.draw.rect(surf, CASTLE_WINDOW,
+                     (cx - 2, cy - 3, 4, 8), border_radius=1)
+
+    # ── Orb on spire ─────────────────────────────────────────────────────────
+    spire_top = merlon_y - 2
+    pygame.draw.line(surf, (80, 80, 110), (cx, spire_top), (cx, spire_top - 8), 2)
+
+    orb_r = 7 + (level - 1) * 2
+    orb_y = spire_top - 8 - orb_r
+
+    # Orb glow aura
+    glow_r = orb_r + 4 + int(math.sin(t * 2) * 2)
+    glow_surf = pygame.Surface((glow_r * 4, glow_r * 4), pygame.SRCALPHA)
+    pygame.draw.circle(glow_surf, (60, 120, 255, 50),
+                       (glow_r * 2, glow_r * 2), glow_r)
+    surf.blit(glow_surf, (cx - glow_r * 2, orb_y - glow_r * 2))
+
+    # Orb body
+    pygame.draw.circle(surf, (20, 60, 180), (cx, orb_y), orb_r)
+    pygame.draw.circle(surf, (60, 140, 255), (cx, orb_y), orb_r - 1)
+    # Inner bright spot
+    pygame.draw.circle(surf, (160, 210, 255),
+                       (cx - orb_r//3, orb_y - orb_r//3), max(2, orb_r//3))
+    pygame.draw.circle(surf, (20, 60, 180), (cx, orb_y), orb_r, 1)
+
+    # Level 2+: orbit ring
+    if level >= 2:
+        ring_r = orb_r + 5
+        pygame.draw.circle(surf, (80, 160, 255), (cx, orb_y), ring_r, 1)
+        # Orbiting dot
+        dot_x = cx + int(math.cos(t * 2.5) * ring_r)
+        dot_y = orb_y + int(math.sin(t * 2.5) * ring_r * 0.4)
+        pygame.draw.circle(surf, CYAN, (dot_x, dot_y), 3)
+
+    # Level 3: twin sparks
+    if level >= 3:
+        for k, angle_off in enumerate([0.0, math.pi]):
+            sx = cx + int(math.cos(t * 3 + angle_off) * (orb_r + 8))
+            sy = orb_y + int(math.sin(t * 3 + angle_off) * (orb_r + 8) * 0.35)
+            pygame.draw.circle(surf, YELLOW, (sx, sy), 3)
+            pygame.draw.circle(surf, WHITE,  (sx, sy), 1)
+
+
+def draw_tower_letter(surf, cx, cy, anim, level):
+    """
+    Quill Tower — slender purple tower topped with an enchanted feather quill.
+    Level 1: quill only. Level 2: ink droplets orbit. Level 3: scroll banner.
+    """
+    t = anim
+
+    # ── Slender tower body ────────────────────────────────────────────────────
+    body_w, body_h = 22, 30
+
+    pygame.draw.ellipse(surf, (30, 10, 50),
+                        (cx - body_w//2 + 2, cy - body_h//2 + 5, body_w, body_h))
+    pygame.draw.ellipse(surf, (70, 30, 110),
+                        (cx - body_w//2, cy - body_h//2, body_w, body_h))
+    pygame.draw.ellipse(surf, (110, 55, 160),
+                        (cx - body_w//2, cy - body_h//2 - 3, body_w, body_h))
+    # Highlight
+    pygame.draw.line(surf, (180, 120, 220),
+                     (cx - body_w//2 + 3, cy - body_h//2 - 2),
+                     (cx - body_w//2 + 3, cy + body_h//2 - 6), 2)
+
+    # Narrow pointed roof / cap
+    roof_pts = [
+        (cx - body_w//2, cy - body_h//2 - 2),
+        (cx + body_w//2, cy - body_h//2 - 2),
+        (cx,             cy - body_h//2 - 14),
+    ]
+    pygame.draw.polygon(surf, (60, 25, 100), roof_pts)
+    pygame.draw.polygon(surf, (100, 50, 150), roof_pts)
+    pygame.draw.polygon(surf, (80, 35, 120), roof_pts, 1)
+
+    # Tiny window
+    pygame.draw.rect(surf, (40, 20, 60),
+                     (cx - 3, cy - 3, 6, 8), border_radius=2)
+    pygame.draw.rect(surf, CASTLE_WINDOW,
+                     (cx - 2, cy - 2, 4, 6), border_radius=1)
+
+    # ── Quill on top ──────────────────────────────────────────────────────────
+    quill_base_y = cy - body_h//2 - 14
+    quill_len    = 18 + (level - 1) * 3
+    quill_sway   = int(math.sin(t * 1.8) * 2)
+
+    # Quill shaft
+    pygame.draw.line(surf, (220, 200, 255),
+                     (cx + quill_sway, quill_base_y),
+                     (cx + quill_sway - 4, quill_base_y - quill_len), 2)
+
+    # Barbs on quill (left side)
+    for i in range(1, 5):
+        frac  = i / 5
+        bx    = cx + quill_sway - int(4 * frac)
+        by    = quill_base_y - int(quill_len * frac)
+        pygame.draw.line(surf, (200, 160, 240),
+                         (bx, by), (bx - 5, by + 3), 1)
+        pygame.draw.line(surf, (200, 160, 240),
+                         (bx, by), (bx + 4, by + 3), 1)
+
+    # Quill tip (nib)
+    nib_y = quill_base_y - quill_len
+    pygame.draw.circle(surf, PINK, (cx + quill_sway - 4, nib_y), 3)
+    pygame.draw.circle(surf, WHITE, (cx + quill_sway - 4, nib_y), 1)
+
+    # Level 2+: orbiting ink droplets
+    if level >= 2:
+        for k in range(2):
+            angle = t * 2.2 + k * math.pi
+            dx = cx + int(math.cos(angle) * 13)
+            dy = (quill_base_y - quill_len//2) + int(math.sin(angle) * 5)
+            pygame.draw.circle(surf, PINK,   (dx, dy), 3)
+            pygame.draw.circle(surf, PURPLE, (dx, dy), 3, 1)
+
+    # Level 3: tiny scroll banner hanging off tower
+    if level >= 3:
+        scroll_x = cx + body_w//2 - 2
+        scroll_y = cy - 4
+        pygame.draw.rect(surf, (240, 225, 190),
+                         (scroll_x, scroll_y, 14, 10), border_radius=2)
+        pygame.draw.rect(surf, (180, 150, 100),
+                         (scroll_x, scroll_y, 14, 10), 1, border_radius=2)
+        # Tiny "A" on scroll
+        f = pygame.font.SysFont("arial", 7, bold=True)
+        s = f.render("A", True, (80, 40, 20))
+        surf.blit(s, (scroll_x + 4, scroll_y + 1))
+
+
+def draw_tower_star(surf, cx, cy, anim, level):
+    """
+    Astrology Tower — wide gold observatory dome with a spinning star crown.
+    Level 1: 4-point star. Level 2: 8-point star + glow. Level 3: orbiting stars.
+    """
+    t = anim
+
+    # ── Observatory dome body ─────────────────────────────────────────────────
+    dome_w, dome_h = 34, 20
+
+    # Shadow
+    pygame.draw.ellipse(surf, (20, 14, 0),
+                        (cx - dome_w//2 + 3, cy - dome_h//2 + 6, dome_w, dome_h))
+
+    # Dome lower half (flat base ring)
+    pygame.draw.rect(surf, (100, 75, 10),
+                     (cx - dome_w//2, cy, dome_w, 10), border_radius=4)
+    pygame.draw.rect(surf, (160, 120, 20),
+                     (cx - dome_w//2, cy - 2, dome_w, 10), border_radius=4)
+
+    # Dome upper half (curved top)
+    pygame.draw.ellipse(surf, (100, 75, 10),
+                        (cx - dome_w//2 + 2, cy - dome_h - 2, dome_w - 4, dome_h + 4))
+    pygame.draw.ellipse(surf, (180, 140, 30),
+                        (cx - dome_w//2, cy - dome_h, dome_w, dome_h + 4))
+    # Gold sheen highlight
+    pygame.draw.ellipse(surf, (230, 200, 80),
+                        (cx - dome_w//2 + 4, cy - dome_h + 2, dome_w//3, dome_h//2))
+
+    # Slit opening on dome
+    pygame.draw.rect(surf, (30, 20, 0),
+                     (cx - 4, cy - dome_h + 2, 8, dome_h - 4), border_radius=2)
+    pygame.draw.rect(surf, CASTLE_WINDOW,
+                     (cx - 3, cy - dome_h + 3, 6, dome_h - 6), border_radius=1)
+
+    # ── Spire on top of dome ──────────────────────────────────────────────────
+    spire_y = cy - dome_h
+    pygame.draw.line(surf, (140, 100, 10),
+                     (cx, spire_y), (cx, spire_y - 10), 2)
+    pygame.draw.circle(surf, GOLD, (cx, spire_y - 10), 3)
+
+    # ── Spinning star crown ───────────────────────────────────────────────────
+    star_cx, star_cy = cx, spire_y - 18
+    star_r_outer = 8 + (level - 1) * 2
+    star_r_inner = star_r_outer // 2
+    points_n     = 4 if level == 1 else 8
+
+    spin = t * 1.5
+    star_pts = []
+    for i in range(points_n * 2):
+        angle = spin + i * math.pi / points_n
+        r     = star_r_outer if i % 2 == 0 else star_r_inner
+        star_pts.append((
+            star_cx + int(math.cos(angle) * r),
+            star_cy + int(math.sin(angle) * r),
+        ))
+
+    # Star glow
+    if level >= 2:
+        glow_surf = pygame.Surface(((star_r_outer + 6) * 4,
+                                     (star_r_outer + 6) * 4), pygame.SRCALPHA)
+        gr = star_r_outer + 6
+        pygame.draw.circle(glow_surf, (255, 220, 50, 55),
+                           (gr * 2, gr * 2), gr)
+        surf.blit(glow_surf, (star_cx - gr * 2, star_cy - gr * 2))
+
+    pygame.draw.polygon(surf, (160, 110, 0), star_pts)
+    pygame.draw.polygon(surf, GOLD, star_pts)
+    pygame.draw.polygon(surf, YELLOW, star_pts, 1)
+    # Bright centre pip
+    pygame.draw.circle(surf, WHITE, (star_cx, star_cy), 3)
+    pygame.draw.circle(surf, YELLOW, (star_cx, star_cy), 2)
+
+    # Level 3: three small orbiting stars
+    if level >= 3:
+        for k in range(3):
+            angle = t * 2.0 + k * (math.pi * 2 / 3)
+            ox = star_cx + int(math.cos(angle) * (star_r_outer + 7))
+            oy = star_cy + int(math.sin(angle) * (star_r_outer + 7) * 0.5)
+            # Mini 4-pt star
+            mini_pts = []
+            for i in range(8):
+                a = angle + t + i * math.pi / 4
+                r = 4 if i % 2 == 0 else 2
+                mini_pts.append((ox + int(math.cos(a)*r),
+                                 oy + int(math.sin(a)*r)))
+            pygame.draw.polygon(surf, GOLD,   mini_pts)
+            pygame.draw.polygon(surf, YELLOW, mini_pts, 1)
+
+
 # ─── Classes ────────────────────────────────────────────────────────────────
 
 class Enemy:
@@ -988,25 +1243,19 @@ class Tower:
 
     def draw(self, surf, selected=False):
         px, py = self.px, self.py
-        base_r = TILE // 2 - 4
-        pygame.draw.circle(surf, (40, 40, 60), (px, py), base_r + 3)
-        pygame.draw.circle(surf, self.color, (px, py), base_r)
-        ring_r = int(base_r + 3 + math.sin(self.anim) * 2)
-        pygame.draw.circle(surf, self.color, (px, py), ring_r, 2)
 
-        font_s = pygame.font.SysFont("arial", 18, bold=True)
-        labels = {"number": "1+", "letter": "A", "star": "*"}
-        label = labels.get(self.ttype, "?")
-        txt = font_s.render(label, True, WHITE)
-        surf.blit(txt, txt.get_rect(center=(px, py)))
-
-        for i in range(self.level):
-            sx = px - 8 + i * 8
-            pygame.draw.circle(surf, GOLD, (sx, py + base_r + 6), 3)
-
+        # Range ring underneath the tower art
         if selected:
             pygame.draw.circle(surf, YELLOW, (px, py), self.range, 1)
-            pygame.draw.circle(surf, YELLOW, (px, py), base_r + 5, 3)
+
+        # Dispatch to per-type art functions
+        if   self.ttype == "number": draw_tower_number(surf, px, py, self.anim, self.level)
+        elif self.ttype == "letter": draw_tower_letter(surf, px, py, self.anim, self.level)
+        elif self.ttype == "star":   draw_tower_star  (surf, px, py, self.anim, self.level)
+
+        # Selection ring on top so it's always visible
+        if selected:
+            pygame.draw.circle(surf, YELLOW, (px, py), 22, 2)
 
     def upgrade(self):
         if self.level < 3:
