@@ -14,36 +14,12 @@ document.addEventListener("DOMContentLoaded", () => {
     populateTop3();
   }
 
-  function formatXP(n) {
-    return `${Number(n).toLocaleString()} XP`;
+  function getSortedUsers() {
+    return [...users].sort((a, b) => b.xp - a.xp);
   }
 
-  function createRow(user, rank) {
-    const row = document.createElement("div");
-    row.className = "leaderboard-roster-row";
-
-    if (rank === 1) row.classList.add("leaderboard-row-top");
-    if (user.you) row.classList.add("leaderboard-row-you");
-
-    // Use first character of username as avatar letter
-    const avatarLetter = user.name ? user.name.trim().charAt(0).toUpperCase() : "?";
-
-    row.innerHTML = `
-        <div class="leaderboard-roster-left">
-          <div class="leaderboard-rank-bubble">${rank}</div>
-          <div class="leaderboard-avatar">${avatarLetter}</div>
-          <div class="leaderboard-meta">
-            <div class="leaderboard-name">
-              ${escapeHtml(user.name)}
-              ${user.you ? '<span class="leaderboard-you-badge">YOU</span>' : ''}
-            </div>
-            <div class="leaderboard-xp">${formatXP(user.xp)}</div>
-          </div>
-        </div>
-        <div class="leaderboard-xp">${formatXP(user.xp)}</div>
-      `;
-
-    return row;
+  function formatXP(n) {
+    return `${Number(n).toLocaleString()} XP`;
   }
 
   function escapeHtml(str) {
@@ -56,10 +32,45 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, "&#039;");
   }
 
+  // Use first character of username as avatar letter
+  function getAvatarLetter(user) {
+    return user.name ? user.name.trim().charAt(0).toUpperCase() : "?";
+  }
+
+  function createRow(user, rank) {
+    const row = document.createElement("div");
+    row.className = "leaderboard-roster-row";
+    row.setAttribute("role", "listitem");
+
+    if (rank === 1) row.classList.add("leaderboard-row-top");
+    if (user.you) row.classList.add("leaderboard-row-you");
+
+    const avatarLetter = getAvatarLetter(user);
+
+    row.innerHTML = `
+      <div class="leaderboard-roster-left">
+        <div class="leaderboard-rank-bubble">${rank}</div>
+        <div class="leaderboard-avatar">${avatarLetter}</div>
+        <div class="leaderboard-meta">
+          <div class="leaderboard-name">
+            ${escapeHtml(user.name)}
+            ${user.you ? '<span class="leaderboard-you-badge">YOU</span>' : ''}
+          </div>
+          <div class="leaderboard-xp">${formatXP(user.xp)}</div>
+        </div>
+      </div>
+      <div class="leaderboard-xp">${formatXP(user.xp)}</div>
+    `;
+
+    return row;
+  }
+
   // Populate the full leaderboard
   function populateFullLeaderboard() {
+    if (!fullRoster) return;
+
     fullRoster.innerHTML = "";
-    const sorted = [...users].sort((a, b) => b.xp - a.xp);
+    const sorted = getSortedUsers();
 
     sorted.forEach((user, idx) => {
       fullRoster.appendChild(createRow(user, idx + 1));
@@ -68,9 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Populate the top 3 area. If current user isn't top 3, append them
   function populateTop3() {
+    if (!topRoster) return;
+
     topRoster.innerHTML = "";
 
-    const sorted = [...users].sort((a, b) => b.xp - a.xp);
+    const sorted = getSortedUsers();
     const top3 = sorted.slice(0, 3);
 
     // Append top 3 rows
