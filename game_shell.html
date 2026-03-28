@@ -4,32 +4,46 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Navigation Bar Test</title>
+    <title>Game</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+    <!-- Main container -->
     <div class="auth-container">
         <div class="background-blur" aria-hidden="true"></div>
         <div class="background-blur-bottom" aria-hidden="true"></div>
 
         <div class="preview-wrap">
+
+            <!-- Game title at the top -->
+            <div class="game-title-wrap">
+                <h1 id="gameTitle" class="game-name" style="color: white;">GAME</h1>
+            </div>
+
+            <!-- Game display card -->
             <div class="auth-box preview-game-card">
                 <div class="game-frame-wrap">
-                    <iframe id="gameFrame" class="game-frame" src="games/math_catch/build/web/index.html" title="Game"
-                        loading="lazy"></iframe>
+                    <!-- Iframe where game loads -->
+                    <iframe id="gameFrame" class="game-frame" title="Game" loading="lazy"></iframe>
                 </div>
             </div>
 
+            <!-- Navigation bar under the game -->
             <div class="game-nav" aria-label="Game navigation">
-                <a class="nav-lobby-btn" href="lobby.html">
-                    RETURN TO LOBBY
-                </a>
 
+                <!-- Button to return to the lobby -->
+                <a class="nav-lobby-btn" href="lobby.html">RETURN TO LOBBY</a>
+
+                <!-- Current student info -->
                 <button class="nav-student-box leaderboard-roster-row leaderboard-row-you" id="studentBox"
                     type="button">
                     <div class="leaderboard-roster-left">
+
+                        <!-- Avatar -->
                         <div class="leaderboard-avatar" aria-hidden="true"></div>
+
+                        <!-- Student name, XP, rank -->
                         <div class="leaderboard-meta">
                             <div class="leaderboard-name" id="studentName"></div>
                             <div class="leaderboard-xp" id="studentXp"></div>
@@ -37,16 +51,22 @@
                     </div>
                 </button>
 
+                <!-- Mini leaderboard -->
                 <button class="nav-mini-leaderboard" id="viewAllButton" type="button" aria-haspopup="dialog"
                     aria-controls="fullLeaderboard">
+
                     <div class="nav-mini-left">
+                        <!-- Star icon -->
                         <div class="nav-mini-icon" aria-hidden="true">★</div>
+
+                        <!-- Label, description -->
                         <div class="nav-mini-text">
                             <strong>LEADERBOARD</strong>
                             <span>View game ranking</span>
                         </div>
                     </div>
 
+                    <!-- User rank, score preview -->
                     <div class="nav-mini-stats">
                         <div class="rank" id="miniRank"></div>
                         <div class="score" id="miniScore"></div>
@@ -56,9 +76,14 @@
         </div>
     </div>
 
+    <!-- Full leaderboard -->
     <div id="fullLeaderboard" class="full-leaderboard" aria-hidden="true">
+
         <div class="full-leaderboard-content" role="dialog" aria-modal="true" aria-labelledby="fullLeaderboardTitle">
+
             <div class="full-leaderboard-header">
+
+                <!-- Title with star icon -->
                 <div class="leaderboard-title">
                     <div class="leaderboard-star" aria-hidden="true">★</div>
                     <div>
@@ -66,13 +91,36 @@
                     </div>
                 </div>
 
+                <!-- Close button -->
                 <button id="closeFullLeaderboard" class="close-full-leaderboard"
                     aria-label="Close full leaderboard">✕</button>
             </div>
 
+            <!-- List of all players -->
             <div class="full-leaderboard-roster" id="fullRoster" role="list"></div>
         </div>
     </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        // Get game key
+        const gameKey = params.get("game") || "";
+
+        // Get game title
+        const gameTitle = params.get("title") || "GAME";
+        window.LEADERBOARD_GAME_KEY = gameKey;
+
+        // Set title
+        document.getElementById("gameTitle").textContent = gameTitle.toUpperCase();
+
+        document.title = gameTitle;
+
+        // Load the game into the iframe
+        document.getElementById("gameFrame").src = gameKey
+            ? `games/${gameKey}/build/web/index.html`
+            : "lobby.html";
+    </script>
 
     <script src="leaderboard.js"></script>
     <script src="navigation_bar.js"></script>

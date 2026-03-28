@@ -4,24 +4,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeButton = document.getElementById("closeFullLeaderboard");
   const fullRoster = document.getElementById("fullRoster");
   const topRoster = document.getElementById("roster");
+  const headerTitle = document.getElementById("leaderboardGameTitle");
+
+  // Get current game key
+  const gameKey = getGameKey();
 
   let users = [];
 
-  // Gets XP and username
-  async function fetchLeaderboard() {
-    const response = await fetch("get_leaderboard.php");
-    users = await response.json();
-    populateTop3();
+  // Set leaderboard header title
+  if (headerTitle) {
+    headerTitle.textContent = gameKey
+      ? `LEADERBOARD — ${gameKey}`
+      : "LEADERBOARD";
   }
 
-  function getSortedUsers() {
-    return [...users].sort((a, b) => b.xp - a.xp);
+  // Determine which game the leaderboard should load
+  function getGameKey() {
+    // Global variable if it exists
+    if (window.LEADERBOARD_GAME_KEY) return String(window.LEADERBOARD_GAME_KEY);
+
+    // Otherwise, get ?game= from the URL
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("game")) return params.get("game");
+    } catch (e) {
+    }
+    // No game key found
+    return "";
   }
 
-  function formatXP(n) {
+  // Get the numeric value to rank by
+  function getValue(user) {
+    return gameKey ? Number(user.score || 0) : Number(user.xp || 0);
+  }
+
+  // Format value
+  function formatValue(n) {
     return `${Number(n).toLocaleString()} XP`;
   }
 
+
+  // Avoid usernames injecting unsafe markup
   function escapeHtml(str) {
     if (typeof str !== "string") return "";
     return str
@@ -32,20 +55,22 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, "&#039;");
   }
 
-  // Use first character of username as avatar letter
-  function getAvatarLetter(user) {
-    return user.name ? user.name.trim().charAt(0).toUpperCase() : "?";
-  }
-
+  // Create a leaderboard row element for user
   function createRow(user, rank) {
     const row = document.createElement("div");
     row.className = "leaderboard-roster-row";
     row.setAttribute("role", "listitem");
 
+    // Highlight top player and current user
     if (rank === 1) row.classList.add("leaderboard-row-top");
     if (user.you) row.classList.add("leaderboard-row-you");
 
-    const avatarLetter = getAvatarLetter(user);
+    // Get avatar letter
+    const avatarLetter = user.name
+      ? user.name.trim().charAt(0).toUpperCase()
+      : "?";
+
+    const value = getValue(user);
 
     row.innerHTML = `
       <div class="leaderboard-roster-left">
@@ -56,68 +81,92 @@ document.addEventListener("DOMContentLoaded", () => {
             ${escapeHtml(user.name)}
             ${user.you ? '<span class="leaderboard-you-badge">YOU</span>' : ''}
           </div>
-          <div class="leaderboard-xp">${formatXP(user.xp)}</div>
         </div>
       </div>
-      <div class="leaderboard-xp">${formatXP(user.xp)}</div>
+      <div class="leaderboard-xp">${formatValue(value)}</div>
     `;
 
     return row;
   }
 
-  // Populate the full leaderboard
+  // Fetch leaderboard data
+  async function fetchLeaderboard() {
+    const url = gameKey
+      ? `get_leaderboard.php?game=${encodeURIComponent(gameKey)}`
+      : "get_leaderboard.php";
+
+    try {
+      const response = await fetch(url);
+      users = await response.json();
+    } catch (err) {
+      console.error("Failed to fetch leaderboard:", err);
+      users = [];
+    }
+
+    // Populate top 3
+    populateTop3();
+  }
+
+  // Return users sorted by highest value first
+  function getSortedUsers() {
+    return [...users].sort((a, b) => getValue(b) - getValue(a));
+  }
+
+  // Populate full leaderboard
   function populateFullLeaderboard() {
     if (!fullRoster) return;
 
     fullRoster.innerHTML = "";
     const sorted = getSortedUsers();
 
+    // Add all users to full leaderboard
     sorted.forEach((user, idx) => {
       fullRoster.appendChild(createRow(user, idx + 1));
     });
   }
 
-  // Populate the top 3 area. If current user isn't top 3, append them
+  // Populate top 3 leaderboard
   function populateTop3() {
     if (!topRoster) return;
 
     topRoster.innerHTML = "";
-
     const sorted = getSortedUsers();
+
+    // Get top 3 users
     const top3 = sorted.slice(0, 3);
 
-    // Append top 3 rows
     top3.forEach((user, idx) => {
       topRoster.appendChild(createRow(user, idx + 1));
     });
 
-    // Find current user
+    // Current user is shown even if not in top 3
     const youIndex = sorted.findIndex(u => u.you === true);
     if (youIndex !== -1) {
       const youRank = youIndex + 1;
       const youUser = sorted[youIndex];
 
+      // Only add if outside top 3
       if (youRank > 3) {
         const youRow = createRow(youUser, youRank);
-        if (!youRow.classList.contains("leaderboard-row-you")) {
-          youRow.classList.add("leaderboard-row-you");
-        }
         topRoster.appendChild(youRow);
       }
     }
   }
 
+  // Open full leaderboard
   function openFullLeaderboard() {
     populateFullLeaderboard();
     fullLeaderboard.classList.add("active");
     fullLeaderboard.setAttribute("aria-hidden", "false");
   }
 
+  // Close full leaderboard
   function closeFullLeaderboard() {
     fullLeaderboard.classList.remove("active");
     fullLeaderboard.setAttribute("aria-hidden", "true");
   }
 
+  // Open on button click
   if (openButton) {
     openButton.addEventListener("click", (e) => {
       e.preventDefault();
@@ -125,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Close on close button click
   if (closeButton) {
     closeButton.addEventListener("click", (e) => {
       e.preventDefault();
@@ -132,14 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // click outside to close
+  // Close when clicking outside content
   if (fullLeaderboard) {
     fullLeaderboard.addEventListener("click", (e) => {
       if (e.target === fullLeaderboard) closeFullLeaderboard();
     });
   }
 
-  // ESC to close
+  // Close when pressing Escape key
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeFullLeaderboard();
   });
