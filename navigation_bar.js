@@ -6,8 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const miniScore = document.getElementById("miniScore");
 
     // Get the current game key
-    const gameKey = getGameKey();
-
+    const params = new URLSearchParams(window.location.search);
+    const folder = params.get("folder") || "";
+    const gameKey = params.get("game") || "";
     let globalUsers = [];
     let gameUsers = [];
 
@@ -196,3 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchLeaderboardData();
 });
+
+console.log("URL:", window.location.href);
+console.log("GAME:", params.get("game"));
+console.log("FOLDER:", params.get("folder"));
