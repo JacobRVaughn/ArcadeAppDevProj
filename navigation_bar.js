@@ -6,9 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const miniScore = document.getElementById("miniScore");
 
     // Get the current game key
-    const gameKey = getGameKey();
-
-    let users = [];
+    const params = new URLSearchParams(window.location.search);
+    const folder = params.get("folder") || "";
+    const gameKey = params.get("game") || "";
+    let globalUsers = [];
+    let gameUsers = [];
 
     // Determine which game the leaderboard should load
     function getGameKey() {
@@ -48,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Return array sorted from highest to lowest
-    function getSortedUsers() {
+    function getSortedUsers(users) {
         return [...users].sort((a, b) => getValue(b) - getValue(a));
     }
 
@@ -57,34 +59,45 @@ document.addEventListener("DOMContentLoaded", () => {
         return user.name ? user.name.trim().charAt(0).toUpperCase() : "?";
     }
 
-    // Find the current signed in user, fallback is top user
+    // Find the current signed in user
     function getYouUser(sorted) {
-        return sorted.find(u => u.you === true) || sorted[0] || null;
+        return sorted.find(u => u.you === true) || null;
     }
 
     // Get the rank position of a specific user in the sorted list
     function getRankOfUser(sorted, user) {
-        if (!user) return "-";
+        if (!user) return null;
 
         const idx = sorted.findIndex(
-            u => u.name === user.name && getValue(u) === getValue(user)
+            u => u.id === user.id || (u.name === user.name && getValue(u) === getValue(user))
         );
 
-        return idx === -1 ? "-" : idx + 1;
+        return idx === -1 ? null : idx + 1;
     }
 
     // Fetch leaderboard data from the server
     async function fetchLeaderboardData() {
-        const url = gameKey
+        const globalUrl = "get_leaderboard.php";
+        const gameUrl = gameKey
             ? `get_leaderboard.php?game=${encodeURIComponent(gameKey)}`
-            : "get_leaderboard.php";
+            : null;
 
         try {
-            const response = await fetch(url);
-            users = await response.json();
+            const response = await fetch(globalUrl);
+            globalUsers = await response.json();
         } catch (error) {
-            console.error("Failed to fetch leaderboard data:", error);
-            users = [];
+            console.error("Failed to fetch global leaderboard data:", error);
+            globalUsers = [];
+        }
+
+        if (gameUrl) {
+            try {
+                const response = await fetch(gameUrl);
+                gameUsers = await response.json();
+            } catch (error) {
+                console.error("Failed to fetch game leaderboard data:", error);
+                gameUsers = [];
+            }
         }
 
         // Update both leaderboard displays after loading
@@ -96,13 +109,19 @@ document.addEventListener("DOMContentLoaded", () => {
     function populateStudentBox() {
         if (!studentBox) return;
 
-        const sorted = getSortedUsers();
-        const youUser = getYouUser(sorted);
-        if (!youUser) return;
+        const globalSorted = getSortedUsers(globalUsers);
+        const gameSorted = getSortedUsers(gameUsers);
 
-        const avatarLetter = getAvatarLetter(youUser);
-        const rank = getRankOfUser(sorted, youUser);
-        const value = getValue(youUser);
+        const globalYou = getYouUser(globalSorted);
+        const gameYou = getYouUser(gameSorted);
+
+        const userForDisplay = globalYou || gameYou;
+        if (!userForDisplay) return;
+
+        const avatarLetter = getAvatarLetter(userForDisplay);
+        const gameRank = getRankOfUser(gameSorted, gameYou);
+        const globalRank = getRankOfUser(globalSorted, globalYou);
+        const value = gameKey ? getValue(gameYou || userForDisplay) : getValue(globalYou || userForDisplay);
 
         // Update avatar letter
         const avatar = studentBox.querySelector(".leaderboard-avatar");
@@ -110,27 +129,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update name
         if (studentName) {
-            studentName.innerHTML = escapeHtml(youUser.name);
+            studentName.innerHTML = escapeHtml(userForDisplay.name);
         }
 
         // Update rank and xp
         if (studentXp) {
-            studentXp.textContent = gameKey
-                ? `Rank ${rank} · ${formatValue(value)}`
-                : `Rank ${rank} · Level 1`;
+            if (gameKey) {
+                studentXp.textContent = gameYou
+                    ? `Rank ${gameRank} · ${formatValue(value)}`
+                    : "No XP yet";
+            } else {
+                studentXp.textContent = globalYou
+                    ? `Rank ${globalRank} · Level 1` // placeholder for rank
+                    : "No XP yet";
+            }
         }
     }
 
     // Fills in mini leaderboard display on navigation bar
     function populateMiniLeaderboard() {
-        const sorted = getSortedUsers();
+        if (gameKey) {
+            const sorted = getSortedUsers(gameUsers);
+            const youUser = getYouUser(sorted);
+
+            if (!youUser) {
+                if (miniRank) miniRank.textContent = "-";
+                if (miniScore) miniScore.textContent = "No XP yet";
+                return;
+            }
+
+            const rank = getRankOfUser(sorted, youUser);
+            const value = getValue(youUser);
+
+            if (miniRank) miniRank.textContent = rank ? `#${rank}` : "-";
+            if (miniScore) miniScore.textContent = formatValue(value);
+            return;
+        }
+
+        const sorted = getSortedUsers(globalUsers);
         const youUser = getYouUser(sorted);
-        if (!youUser) return;
+
+        if (!youUser) {
+            if (miniRank) miniRank.textContent = "-";
+            if (miniScore) miniScore.textContent = "No rank yet";
+            return;
+        }
 
         const rank = getRankOfUser(sorted, youUser);
         const value = getValue(youUser);
 
-        if (miniRank) miniRank.textContent = `#${rank}`;
+        if (miniRank) miniRank.textContent = rank ? `#${rank}` : "-";
         if (miniScore) miniScore.textContent = formatValue(value);
     }
 
@@ -149,3 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchLeaderboardData();
 });
+
+console.log("URL:", window.location.href);
+console.log("GAME:", params.get("game"));
+console.log("FOLDER:", params.get("folder"));

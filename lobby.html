@@ -24,16 +24,16 @@
 
             <!-- Game Type Selection -->
             <div class="tabs">
-                <button class="tab active" id="catchStars" onclick="goToGame(event, 'math_catch', 'Math Catch')">
+                <button class="tab active" id="catchStars" onclick="goToGame(event, 'math_catch', 'math_catch', 'Math Catch')">
                     Math Catch
                 </button>
 
-                <button class="tab" id="readingQuest" onclick="goToGame(event, 'reading_quest', 'Word Blitz')">
+                <button class="tab" id="readingQuest" onclick="goToGame(event, 'reading_quest', 'reading_quest', 'Word Blitz')">
                     Word Blitz
                 </button>
-                
-                <button class="tab" id="towerDefense"
-                    onclick="goToGame(event, 'tower', 'Math & Letters Tower Kingdom')">
+
+                <button class="tab" id="math-kingdom"
+                    onclick="goToGame(event, 'tower', 'math-kingdom', 'Math & Letters Tower Kingdom')"> 
                     Math & Letters Tower Kingdom
                 </button>
             </div>
@@ -44,9 +44,10 @@
     </div>
 
     <script>
-        function goToGame(event, game, title) {
+        function goToGame(event, folder, gameId, title) {
             event.preventDefault();
-            window.location.href = `game_shell.html?game=${encodeURIComponent(game)}&title=${encodeURIComponent(title)}`;
+            window.location.href =
+                `game_shell.html?folder=${encodeURIComponent(folder)}&game=${encodeURIComponent(gameId)}&title=${encodeURIComponent(title)}`;
         }
     </script>
 
