@@ -1,3 +1,4 @@
+import asyncio
 import random
 import sys
 import pygame
@@ -163,6 +164,7 @@ state = {
     "user_run_channel": None,
     "mob_run_channel": None,
     "mob_run_started_at": None,
+    "xp_overlay_fired": False,
 }
 
 # =========================
@@ -185,6 +187,46 @@ difficulty_rects = {
 # Character positions
 # =========================
 
+def trigger_xp_overlay(won: bool):
+    """Fire the JS game-over XP overlay exactly once via pygbag's window bridge."""
+    if state.get("xp_overlay_fired"):
+        return
+    state["xp_overlay_fired"] = True
+
+    xp_earned = 300 if won else 100
+
+    try:
+        from platform import window  # pygbag injects this in the browser
+        js_code = f"""
+(function() {{
+  var score   = {state['score']};
+  var xp      = {xp_earned};
+  var gameId  = "capital-escape";
+  // Use top-level window so the overlay renders above the iframe
+  var targetWin = window.top || window;
+  var targetDoc = targetWin.document;
+
+  function runOverlay() {{
+    if (typeof targetWin.showGameOverXP === "function") {{
+      targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+    }} else {{
+      if (!targetDoc.getElementById("xpo-script")) {{
+        var s = targetDoc.createElement("script");
+        s.id  = "xpo-script";
+        s.src = "/ArcadeAppDevProj/game-over-xp.js";
+        s.onload = function() {{
+          targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+        }};
+        targetDoc.head.appendChild(s);
+      }}
+    }}
+  }}
+  runOverlay();
+}})();
+"""
+        window.eval(js_code)
+    except Exception as e:
+        print(f"[XP overlay] not in browser, skipped. ({e})")
 
 def generate_question():
     """Pick a random capital and create 3 choices based on difficulty."""
@@ -322,13 +364,16 @@ def reset_game():
     state["correct_country"] = ""
     state["choices"] = []
     state["time_left"] = 0
+    state["xp_overlay_fired"] = False
     reset_positions()
+    
 
 def start_difficulty(mode):
     state["difficulty"] = mode
     state["phase"] = "play"
     state["score"] = 0
     state["question_number"] = 0
+    state["xp_overlay_fired"] = False
     reset_positions()
     generate_question()
 
@@ -486,105 +531,109 @@ def handle_choice(choice_index):
 
 
 reset_game()
+async def main():
+    running = True
+    while running:
+        dt = clock.tick(60) / 1000.0
+        mouse_pos = pygame.mouse.get_pos()
 
-running = True
-while running:
-    dt = clock.tick(60) / 1000.0
-    mouse_pos = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    reset_game()
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
-                reset_game()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if state["phase"] == "difficulty":
+                    for mode, rect in difficulty_rects.items():
+                        if rect.collidepoint(event.pos):
+                            start_difficulty(mode)
+                            break
+                elif state["phase"] == "play":
+                    for i in range(len(choice_rects)):
+                        if get_choice_label_rect(i).collidepoint(event.pos):
+                            handle_choice(i)
+                            break
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if state["phase"] == "difficulty":
-                for mode, rect in difficulty_rects.items():
-                    if rect.collidepoint(event.pos):
-                        start_difficulty(mode)
-                        break
-            elif state["phase"] == "play":
-                for i in range(len(choice_rects)):
-                    if get_choice_label_rect(i).collidepoint(event.pos):
-                        handle_choice(i)
-                        break
-
-    if state["phase"] == "play":
-        state["time_left"] -= dt
-        if state["time_left"] <= 0:
-            stop_running_sounds()
-            state["phase"] = "game_over"
-
-    elif state["phase"] == "animating":
-        stage = state["animation_stage"]
-
-        # Step 1: runner moves to the selected road first
-        if stage == "runner_to_lane":
-            start_user_running_sound()
-            runner_reached = move_toward(state["runner_pos"], state["runner_target"], state["runner_anim_speed"], dt)
-
-            if runner_reached:
-                stop_user_running_sound()
-                choice_index = state["selected_choice"]
-                if state["answer_correct"]:
-                    state["mob_target"] = MOB_LANE_TARGETS[choice_index]
-                    state["animation_stage"] = "mob_follow"
-                    start_mob_running_sound()
-                else:
-                    state["mob_target"] = state["runner_target"]
-                    state["animation_stage"] = "mob_catch"
-                    start_mob_running_sound()
-
-        # Step 2A: correct answer -> mob moves to its fixed target on the same road
-        elif stage == "mob_follow":
-            if state["mob_run_channel"] and state["mob_run_started_at"] is not None:
-                if pygame.time.get_ticks() - state["mob_run_started_at"] >= 2600:
-                    stop_mob_running_sound()
-            mob_reached = move_toward(state["mob_pos"], state["mob_target"], state["mob_anim_speed"], dt)
-
-            if mob_reached:
-                stop_mob_running_sound()
-                state["score"] += 100
-                generate_question()
-                reset_positions()
-                state["phase"] = "play"
-
-        # Step 2B: wrong answer -> mob moves to the runner and catches them
-        elif stage == "mob_catch":
-            if state["mob_run_channel"] and state["mob_run_started_at"] is not None:
-                if pygame.time.get_ticks() - state["mob_run_started_at"] >= 2000:
-                    stop_mob_running_sound()
-            move_toward(state["mob_pos"], state["mob_target"], state["mob_anim_speed"] * 1.35, dt)
-
-            if distance_between(state["runner_pos"], state["mob_pos"]) <= CAUGHT_DISTANCE:
-                stop_mob_running_sound()
+        if state["phase"] == "play":
+            state["time_left"] -= dt
+            if state["time_left"] <= 0:
+                stop_running_sounds()
                 state["phase"] = "game_over"
+                trigger_xp_overlay(won=False)
 
-    # Draw
-    draw_background()
-    draw_hud()
+        elif state["phase"] == "animating":
+            stage = state["animation_stage"]
 
-    # Draw player and mob using animated positions
-    draw_runner(int(state["runner_pos"][0]), int(state["runner_pos"][1]))
-    draw_mob(int(state["mob_pos"][0]), int(state["mob_pos"][1]))
+            # Step 1: runner moves to the selected road first
+            if stage == "runner_to_lane":
+                start_user_running_sound()
+                runner_reached = move_toward(state["runner_pos"], state["runner_target"], state["runner_anim_speed"], dt)
 
-    if state["phase"] == "difficulty":
-        draw_difficulty_screen(mouse_pos)
-    elif state["phase"] == "play":
-        draw_question()
-        draw_choices(mouse_pos)
-    elif state["phase"] == "animating":
-        draw_question()
-        draw_choices((-999, -999))
-    else:
-        draw_question()
-        draw_choices((-999, -999))
-        draw_game_over()
+                if runner_reached:
+                    stop_user_running_sound()
+                    choice_index = state["selected_choice"]
+                    if state["answer_correct"]:
+                        state["mob_target"] = MOB_LANE_TARGETS[choice_index]
+                        state["animation_stage"] = "mob_follow"
+                        start_mob_running_sound()
+                    else:
+                        state["mob_target"] = state["runner_target"]
+                        state["animation_stage"] = "mob_catch"
+                        start_mob_running_sound()
 
-    pygame.display.flip()
+            # Step 2A: correct answer -> mob moves to its fixed target on the same road
+            elif stage == "mob_follow":
+                if state["mob_run_channel"] and state["mob_run_started_at"] is not None:
+                    if pygame.time.get_ticks() - state["mob_run_started_at"] >= 2600:
+                        stop_mob_running_sound()
+                mob_reached = move_toward(state["mob_pos"], state["mob_target"], state["mob_anim_speed"], dt)
 
-pygame.quit()
-sys.exit()
+                if mob_reached:
+                    stop_mob_running_sound()
+                    state["score"] += 100
+                    generate_question()
+                    reset_positions()
+                    state["phase"] = "play"
+
+            # Step 2B: wrong answer -> mob moves to the runner and catches them
+            elif stage == "mob_catch":
+                if state["mob_run_channel"] and state["mob_run_started_at"] is not None:
+                    if pygame.time.get_ticks() - state["mob_run_started_at"] >= 2000:
+                        stop_mob_running_sound()
+                move_toward(state["mob_pos"], state["mob_target"], state["mob_anim_speed"] * 1.35, dt)
+
+                if distance_between(state["runner_pos"], state["mob_pos"]) <= CAUGHT_DISTANCE:
+                    stop_mob_running_sound()
+                    state["phase"] = "game_over"
+                    trigger_xp_overlay(won=False)
+
+        # Draw
+        draw_background()
+        draw_hud()
+
+        # Draw player and mob using animated positions
+        draw_runner(int(state["runner_pos"][0]), int(state["runner_pos"][1]))
+        draw_mob(int(state["mob_pos"][0]), int(state["mob_pos"][1]))
+
+        if state["phase"] == "difficulty":
+            draw_difficulty_screen(mouse_pos)
+        elif state["phase"] == "play":
+            draw_question()
+            draw_choices(mouse_pos)
+        elif state["phase"] == "animating":
+            draw_question()
+            draw_choices((-999, -999))
+        else:
+            draw_question()
+            draw_choices((-999, -999))
+            draw_game_over()
+
+        pygame.display.flip()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+    sys.exit()
+asyncio.run(main())
