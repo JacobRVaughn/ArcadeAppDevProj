@@ -57,10 +57,11 @@
       white-space:nowrap;
     }
     .btn:hover{background: rgba(255,255,255,.10); transform: translateY(-1px)}
+    .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
     .btn.primary{background: rgba(79,93,255,.85); border-color: rgba(79,93,255,.55)}
-    .btn.primary:hover{background: rgba(79,93,255,.95)}
+    .btn.primary:hover:not(:disabled){background: rgba(79,93,255,.95)}
     .btn.danger{background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35)}
-    .btn.danger:hover{background: rgba(239,68,68,.25)}
+    .btn.danger:hover:not(:disabled){background: rgba(239,68,68,.25)}
 
     .wrap{padding:22px 24px}
     .grid{
@@ -86,7 +87,6 @@
     }
     .muted{color:var(--muted2)}
 
-    /* Form controls */
     .field{
       display:flex; flex-direction:column; gap:6px;
       margin-bottom:10px;
@@ -106,7 +106,6 @@
     .row > * {flex:1}
     .select{appearance:none; cursor:pointer}
 
-    /* Left: teacher profile + create class */
     .profile-head{display:flex; gap:12px; align-items:center}
     .avatar{
       width:56px; height:56px; border-radius:18px;
@@ -132,7 +131,6 @@
       margin:14px 0;
     }
 
-    /* Class list */
     .class-item{
       border:1px solid var(--stroke);
       background: rgba(0,0,0,.18);
@@ -161,7 +159,6 @@
     .class-actions{margin-top:10px; display:flex; gap:10px}
     .class-actions .btn{flex:1}
 
-    /* Center analytics */
     .center-head{
       display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
       margin-bottom:12px;
@@ -202,7 +199,6 @@
       margin-top:8px;
     }
 
-    /* Right: top students */
     .leader-row{
       display:flex; justify-content:space-between; align-items:center;
       padding:10px 10px;
@@ -219,7 +215,17 @@
     .leader-name{font-size:13px}
     .leader-score{font-weight:800}
 
-    /* Toast */
+    /* Loading spinner */
+    .spinner{
+      display:inline-block; width:14px; height:14px;
+      border:2px solid rgba(255,255,255,.18);
+      border-top-color: rgba(255,255,255,.75);
+      border-radius:50%;
+      animation: spin .6s linear infinite;
+      vertical-align:middle; margin-right:6px;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
+
     .toast{
       position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
       background: rgba(0,0,0,.75); border:1px solid var(--stroke);
@@ -236,7 +242,7 @@
       <div class="logo">EA</div>
       <div>
         <h1>EDUQUEST ARCADE</h1>
-        <p class="muted">Teacher Dashboard (Sprint 2 prototype)</p>
+        <p class="muted">Teacher Dashboard</p>
       </div>
     </div>
     <div class="row" style="flex:0 0 auto; gap:10px">
@@ -275,11 +281,7 @@
 
         <div class="row" style="flex: 1; gap:10px">
           <button class="btn primary" id="createClassBtn" style="flex:2">CREATE CLASS</button>
-          <button class="btn" id="clearClassesBtn" style="flex:1">CLEAR</button>
-        </div>
-
-        <div class="note">
-          Sprint 2: classes are saved in <b>localStorage</b>. Later, this becomes a DB table (<code>classes</code>) + <code>users.class_id</code>.
+          <button class="btn" id="refreshClassesBtn" style="flex:1">REFRESH</button>
         </div>
 
         <div class="divider"></div>
@@ -288,7 +290,7 @@
         <div id="classList"></div>
       </aside>
 
-      <!-- CENTER: Performance (mostly mock) -->
+      <!-- CENTER: Performance (mock) -->
       <main class="card pad" aria-label="Teacher analytics">
         <div class="center-head">
           <div>
@@ -297,7 +299,6 @@
           </div>
         </div>
 
-        <!-- Dropdown filters -->
         <div class="filters">
           <div class="field" style="margin:0">
             <div class="label">Class</div>
@@ -324,7 +325,6 @@
           </div>
         </div>
 
-        <!-- Mock stats -->
         <div class="stats">
           <div class="stat">
             <div class="label">Total Students</div>
@@ -361,231 +361,210 @@
     </div>
   </div>
 
-  <div class="toast" id="toast">Placeholder</div>
+  <div class="toast" id="toast"></div>
 
   <script>
     // =========================
-    // Storage keys
+    // Config — point this at your PHP file
     // =========================
-    const STORAGE_KEY = "eduquest_classes_v1";
+    const API_URL = "classes_api.php"; // change path if needed
 
     // =========================
     // Teacher placeholder
     // =========================
-    const teacher = {
-      name: "Teacher",
-      initials: "TC"
-    };
+    const teacher = { name: "Teacher", initials: "TC" };
 
     // =========================
-    // Mock student performance data (global pool)
-    // Later: replace with API response filtered by class_id
+    // Mock student pool (analytics only)
     // =========================
     const mockStudentsPool = [
-      { name: "Alex", score: 1320, accuracy: 92, games: 14, classCode: null },
-      { name: "Bri",  score: 1185, accuracy: 89, games: 12, classCode: null },
-      { name: "Chris",score: 1100, accuracy: 85, games: 15, classCode: null },
-      { name: "Dani", score: 1040, accuracy: 83, games: 10, classCode: null },
-      { name: "Evan", score: 980,  accuracy: 88, games: 9,  classCode: null },
-      { name: "Fatima",score: 930, accuracy: 79, games: 11, classCode: null },
-      { name: "Gabe", score: 905,  accuracy: 81, games: 8,  classCode: null }
+      { name: "Alex",   score: 1320, accuracy: 92, games: 14 },
+      { name: "Bri",    score: 1185, accuracy: 89, games: 12 },
+      { name: "Chris",  score: 1100, accuracy: 85, games: 15 },
+      { name: "Dani",   score: 1040, accuracy: 83, games: 10 },
+      { name: "Evan",   score: 980,  accuracy: 88, games: 9  },
+      { name: "Fatima", score: 930,  accuracy: 79, games: 11 },
+      { name: "Gabe",   score: 905,  accuracy: 81, games: 8  }
     ];
+
+    // In-memory cache of classes fetched from DB
+    let classesCache = [];
 
     // =========================
     // Utilities
     // =========================
-    function showToast(msg){
+    function showToast(msg) {
       const t = document.getElementById("toast");
       t.textContent = msg;
       t.classList.add("show");
       clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
     }
 
-    function generateJoinCode(len = 6){
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // avoids confusing 0/O/1/I
+    function generateJoinCode(len = 6) {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let code = "";
-      for (let i = 0; i < len; i++){
+      for (let i = 0; i < len; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       return code;
     }
 
-    function loadClasses(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch { 
-        return [];
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function hashString(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h |= 0; }
+      return Math.abs(h) + 1;
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (loading) {
+        btn._origText = btn.textContent;
+        btn.innerHTML = `<span class="spinner"></span>${btn._origText}`;
+      } else {
+        btn.textContent = btn._origText || btn.textContent;
       }
     }
 
-    function saveClasses(classes){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(classes));
+    // =========================
+    // API calls
+    // =========================
+    async function apiFetchClasses() {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      return data.classes || [];
     }
 
-    function ensureUniqueCode(existingCodes){
-      let tries = 0;
-      while (tries < 50){
-        const code = generateJoinCode(6);
-        if (!existingCodes.has(code)) return code;
-        tries++;
-      }
-      // fallback (very unlikely)
-      return generateJoinCode(8);
+    async function apiCreateClass(name, code) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, code })
+      });
+      const data = await res.json();
+      if (!res.ok) throw Object.assign(new Error(data.error || "Create failed"), { status: res.status, data });
+      return data.class;
+    }
+
+    async function apiDeleteClass(id) {
+      const res = await fetch(`${API_URL}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Delete failed ${res.status}`);
     }
 
     // =========================
-    // Rendering: classes
+    // Rendering
     // =========================
-    function renderTeacher(){
+    function renderTeacher() {
       document.getElementById("teacherName").textContent = teacher.name;
       document.getElementById("teacherAvatar").textContent = teacher.initials;
     }
 
-    function renderClassList(){
-      const classes = loadClasses();
+    function renderClassList() {
       const list = document.getElementById("classList");
       list.innerHTML = "";
 
-      if (classes.length === 0){
+      if (classesCache.length === 0) {
         list.innerHTML = `<p class="muted" style="margin:0; font-size:13px">No classes yet. Create one above.</p>`;
         return;
       }
 
-      classes.forEach(c => {
+      classesCache.forEach(c => {
         const el = document.createElement("div");
         el.className = "class-item";
         el.innerHTML = `
           <div class="class-top">
             <div>
               <p class="class-name">${escapeHtml(c.name)}</p>
-              <div class="class-meta">
-                <span class="tag">Students: ${c.studentsCount}</span>
-                <span class="tag">Created: ${new Date(c.createdAt).toLocaleDateString()}</span>
-              </div>
             </div>
-            <div class="code" title="Join code">${c.code}</div>
+            <div class="code" title="Join code">${escapeHtml(c.code)}</div>
           </div>
-
           <div class="class-actions">
-            <button class="btn" data-copy="${c.code}">COPY CODE</button>
-            <button class="btn primary" data-view="${c.id}">VIEW</button>
+            <button class="btn" data-copy="${escapeHtml(c.code)}">COPY CODE</button>
+            <button class="btn primary" data-view="${escapeHtml(c.id)}">VIEW</button>
+            <button class="btn danger" data-delete="${escapeHtml(c.id)}" title="Delete class">✕</button>
           </div>
         `;
         list.appendChild(el);
       });
     }
 
-    function renderClassSelect(){
-      const classes = loadClasses();
+    function renderClassSelect() {
       const select = document.getElementById("classSelect");
       const current = select.value || "all";
-
-      // Rebuild options
       select.innerHTML = `<option value="all">All Classes</option>`;
-      classes.forEach(c => {
+      classesCache.forEach(c => {
         const opt = document.createElement("option");
         opt.value = c.id;
         opt.textContent = `${c.name} (${c.code})`;
         select.appendChild(opt);
       });
-
-      // Restore selection if possible
-      select.value = classes.some(c => c.id === current) ? current : "all";
+      select.value = classesCache.some(c => String(c.id) === current) ? current : "all";
     }
 
     // =========================
-    // Mock analytics behavior
+    // Mock analytics (unchanged)
     // =========================
-    function computeMockAnalytics(){
-      const classes = loadClasses();
+    function computeMockAnalytics() {
       const classSelect = document.getElementById("classSelect").value;
       const sort = document.getElementById("sortSelect").value;
       const range = document.getElementById("rangeSelect").value;
 
-      // Base pool
       let students = [...mockStudentsPool];
 
-      // If a specific class selected, "simulate" different numbers by seeding via code
-      if (classSelect !== "all"){
-        const cls = classes.find(c => c.id === classSelect);
+      if (classSelect !== "all") {
+        const cls = classesCache.find(c => String(c.id) === classSelect);
         const seed = cls ? hashString(cls.code) : 1;
         students = students.map((s, i) => {
-          // deterministically adjust stats per class
-          const bump = ((seed + i * 17) % 31) - 15; // -15..15
-          const bump2 = ((seed + i * 9) % 11) - 5;  // -5..5
-          return {
-            ...s,
-            score: Math.max(0, s.score + bump * 8),
-            accuracy: clamp(s.accuracy + bump2, 60, 99),
-            games: Math.max(1, s.games + Math.floor(bump2 / 2))
-          };
+          const bump  = ((seed + i * 17) % 31) - 15;
+          const bump2 = ((seed + i * 9)  % 11) - 5;
+          return { ...s, score: Math.max(0, s.score + bump * 8), accuracy: clamp(s.accuracy + bump2, 60, 99), games: Math.max(1, s.games + Math.floor(bump2 / 2)) };
         });
       }
 
-      // Time range "simulation"
-      const rangeMultiplier = ({
-        today: 0.25,
-        week: 1.0,
-        month: 1.4,
-        all: 2.0
-      })[range] ?? 1.0;
+      const rangeMultiplier = ({ today: 0.25, week: 1.0, month: 1.4, all: 2.0 })[range] ?? 1.0;
+      students = students.map(s => ({ ...s, score: Math.round(s.score * rangeMultiplier), games: Math.max(1, Math.round(s.games * rangeMultiplier)) }));
+      students.sort((a, b) => sort === "accuracy" ? b.accuracy - a.accuracy : sort === "games" ? b.games - a.games : b.score - a.score);
 
-      students = students.map(s => ({
-        ...s,
-        score: Math.round(s.score * rangeMultiplier),
-        games: Math.max(1, Math.round(s.games * rangeMultiplier))
-      }));
-
-      // Sort
-      students.sort((a,b) => {
-        if (sort === "accuracy") return b.accuracy - a.accuracy;
-        if (sort === "games") return b.games - a.games;
-        return b.score - a.score; // default score
-      });
-
-      // Stats
-      const totalStudents = students.length;
-      const avgScore = Math.round(students.reduce((sum,s)=>sum+s.score,0)/totalStudents);
-      const avgAcc = Math.round(students.reduce((sum,s)=>sum+s.accuracy,0)/totalStudents);
-
-      // Top 5
-      const top5 = students.slice(0,5);
-
-      return { totalStudents, avgScore, avgAcc, top5, classSelect, sort, range };
+      const total = students.length;
+      return {
+        totalStudents: total,
+        avgScore: Math.round(students.reduce((s, x) => s + x.score, 0) / total),
+        avgAcc:   Math.round(students.reduce((s, x) => s + x.accuracy, 0) / total),
+        top5: students.slice(0, 5),
+        classSelect, sort, range
+      };
     }
 
-    function renderAnalytics(){
+    function renderAnalytics() {
       const a = computeMockAnalytics();
       document.getElementById("statStudents").textContent = a.totalStudents.toLocaleString();
       document.getElementById("statAvgScore").textContent = a.avgScore.toLocaleString();
-      document.getElementById("statAvgAcc").textContent = `${a.avgAcc}%`;
+      document.getElementById("statAvgAcc").textContent   = `${a.avgAcc}%`;
 
-      const classes = loadClasses();
       let classLabel = "All Classes";
-      if (a.classSelect !== "all"){
-        const cls = classes.find(c => c.id === a.classSelect);
+      if (a.classSelect !== "all") {
+        const cls = classesCache.find(c => String(c.id) === a.classSelect);
         if (cls) classLabel = `${cls.name} (${cls.code})`;
       }
 
-      const sortLabel = ({
-        score: "Highest Score",
-        accuracy: "Highest Accuracy",
-        games: "Most Games Played"
-      })[a.sort] ?? "Highest Score";
-
-      const rangeLabel = ({
-        today: "Today",
-        week: "This Week",
-        month: "This Month",
-        all: "All Time"
-      })[a.range] ?? "This Week";
+      const sortLabel  = ({ score: "Highest Score", accuracy: "Highest Accuracy", games: "Most Games Played" })[a.sort] ?? "Highest Score";
+      const rangeLabel = ({ today: "Today", week: "This Week", month: "This Month", all: "All Time" })[a.range] ?? "This Week";
 
       document.getElementById("mockNote").innerHTML =
         `Showing <b>mock analytics</b> for <b>${escapeHtml(classLabel)}</b> — <b>${escapeHtml(rangeLabel)}</b> — sorted by <b>${escapeHtml(sortLabel)}</b>.`;
 
-      // Render top 5 list
       const container = document.getElementById("topStudents");
       container.innerHTML = "";
       a.top5.forEach((s, idx) => {
@@ -603,137 +582,150 @@
     }
 
     // =========================
+    // Load classes from DB
+    // =========================
+    async function loadAndRender() {
+      try {
+        classesCache = await apiFetchClasses();
+      } catch (err) {
+        console.error(err);
+        showToast("Could not load classes from server.");
+        classesCache = [];
+      }
+      renderClassList();
+      renderClassSelect();
+      renderAnalytics();
+    }
+
+    // =========================
     // Event handlers
     // =========================
-    function wireEvents(){
+    function wireEvents() {
       document.getElementById("terminateBtn").addEventListener("click", () => {
-        showToast("Terminate session (placeholder) → redirect to /login");
+        showToast("Terminate session → redirect to /login");
       });
 
       document.getElementById("backToStudentBtn").addEventListener("click", () => {
-        showToast("Student view (placeholder) → open student-dashboard.html");
-        // Later: window.location.href = "student-dashboard.html";
+        showToast("Student view → student-dashboard.html");
       });
 
       document.getElementById("fullReportBtn").addEventListener("click", () => {
-        showToast("Full report (placeholder) → /teacher/report");
+        showToast("Full report → /teacher/report");
       });
 
-      document.getElementById("createClassBtn").addEventListener("click", () => {
+      document.getElementById("refreshClassesBtn").addEventListener("click", async () => {
+        setLoading("refreshClassesBtn", true);
+        await loadAndRender();
+        setLoading("refreshClassesBtn", false);
+        showToast("Classes refreshed.");
+      });
+
+      // Create class
+      document.getElementById("createClassBtn").addEventListener("click", async () => {
         const nameInput = document.getElementById("classNameInput");
         const name = (nameInput.value || "").trim();
-        if (!name){
+        if (!name) {
           showToast("Please enter a class name.");
           nameInput.focus();
           return;
         }
 
-        const classes = loadClasses();
-        const existingCodes = new Set(classes.map(c => c.code));
-        const code = ensureUniqueCode(existingCodes);
+        setLoading("createClassBtn", true);
 
-        const newClass = {
-          id: cryptoRandomId(),
-          name,
-          code,
-          studentsCount: 0, // mock for Sprint 2
-          createdAt: new Date().toISOString()
-        };
+        // Generate a code; retry once on collision (server returns 409)
+        let attempts = 0;
+        let created = null;
+        while (attempts < 3) {
+          const code = generateJoinCode(6);
+          try {
+            created = await apiCreateClass(name, code);
+            break;
+          } catch (err) {
+            if (err.status === 409) {
+              attempts++;
+              continue; // code collision, try a new one
+            }
+            setLoading("createClassBtn", false);
+            showToast("Error creating class: " + (err.message || "unknown error"));
+            return;
+          }
+        }
 
-        classes.unshift(newClass);
-        saveClasses(classes);
+        setLoading("createClassBtn", false);
+
+        if (!created) {
+          showToast("Could not generate a unique code. Try again.");
+          return;
+        }
 
         nameInput.value = "";
+        // Prepend to cache and re-render (avoids a full reload)
+        classesCache.unshift(created);
         renderClassList();
         renderClassSelect();
         renderAnalytics();
-
-        showToast(`Class created: ${name} — Code: ${code}`);
+        showToast(`Class created: ${created.name} — Code: ${created.code}`);
       });
 
-      document.getElementById("clearClassesBtn").addEventListener("click", () => {
-        localStorage.removeItem(STORAGE_KEY);
-        renderClassList();
-        renderClassSelect();
-        renderAnalytics();
-        showToast("Cleared saved classes (localStorage).");
-      });
-
-      // Class list buttons (copy/view)
+      // Class list delegation (copy / view / delete)
       document.getElementById("classList").addEventListener("click", async (e) => {
-        const copyBtn = e.target.closest("[data-copy]");
-        const viewBtn = e.target.closest("[data-view]");
+        const copyBtn   = e.target.closest("[data-copy]");
+        const viewBtn   = e.target.closest("[data-view]");
+        const deleteBtn = e.target.closest("[data-delete]");
 
-        if (copyBtn){
+        if (copyBtn) {
           const code = copyBtn.getAttribute("data-copy");
-          try{
+          try {
             await navigator.clipboard.writeText(code);
             showToast(`Copied code: ${code}`);
           } catch {
-            showToast(`Copy failed — code is: ${code}`);
+            showToast(`Code: ${code}`);
           }
           return;
         }
 
-        if (viewBtn){
-          const classId = viewBtn.getAttribute("data-view");
-          document.getElementById("classSelect").value = classId;
+        if (viewBtn) {
+          const id = viewBtn.getAttribute("data-view");
+          document.getElementById("classSelect").value = id;
           renderAnalytics();
-          showToast("Viewing selected class (mock).");
+          showToast("Viewing selected class (mock analytics).");
+          return;
+        }
+
+        if (deleteBtn) {
+          const id = deleteBtn.getAttribute("data-delete");
+          const cls = classesCache.find(c => String(c.id) === id);
+          if (!cls) return;
+          if (!confirm(`Delete class "${cls.name}" (${cls.code})? This cannot be undone.`)) return;
+
+          deleteBtn.disabled = true;
+          try {
+            await apiDeleteClass(id);
+            classesCache = classesCache.filter(c => String(c.id) !== id);
+            renderClassList();
+            renderClassSelect();
+            renderAnalytics();
+            showToast(`Deleted class: ${cls.name}`);
+          } catch (err) {
+            showToast("Delete failed: " + err.message);
+            deleteBtn.disabled = false;
+          }
           return;
         }
       });
 
-      // Filters
-      ["classSelect","sortSelect","rangeSelect"].forEach(id => {
-        document.getElementById(id).addEventListener("change", () => {
-          renderAnalytics();
-        });
+      // Analytics filters
+      ["classSelect", "sortSelect", "rangeSelect"].forEach(id => {
+        document.getElementById(id).addEventListener("change", renderAnalytics);
       });
-    }
-
-    // =========================
-    // Helpers
-    // =========================
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-
-    function hashString(str){
-      // Simple deterministic hash for mock variation
-      let h = 0;
-      for (let i = 0; i < str.length; i++){
-        h = (h << 5) - h + str.charCodeAt(i);
-        h |= 0;
-      }
-      return Math.abs(h) + 1;
-    }
-
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function cryptoRandomId(){
-      // Small unique id for front-end demo
-      if (crypto && crypto.getRandomValues){
-        const arr = new Uint32Array(2);
-        crypto.getRandomValues(arr);
-        return `${arr[0].toString(16)}${arr[1].toString(16)}`;
-      }
-      return String(Date.now()) + String(Math.floor(Math.random()*1e9));
     }
 
     // =========================
     // Init
     // =========================
     renderTeacher();
-    renderClassList();
-    renderClassSelect();
-    renderAnalytics();
     wireEvents();
+    loadAndRender(); // fetch classes from DB on page load
   </script>
 </body>
 </html>
