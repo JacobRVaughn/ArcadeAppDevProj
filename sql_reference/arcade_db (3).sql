@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 25, 2026 at 04:57 AM
+-- Generation Time: Apr 21, 2026 at 02:50 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -20,6 +20,25 @@ SET time_zone = "+00:00";
 --
 -- Database: `arcade_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `classes`
+--
+
+CREATE TABLE `classes` (
+  `id` int(55) NOT NULL,
+  `code` varchar(55) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `classes`
+--
+
+INSERT INTO `classes` (`id`, `code`, `name`) VALUES
+(0, 'VPMBGB', 'Jacob Class');
 
 -- --------------------------------------------------------
 
@@ -41,7 +60,9 @@ CREATE TABLE `scores` (
 --
 
 INSERT INTO `scores` (`id`, `user_id`, `game_id`, `score`, `xp_earned`, `played_at`) VALUES
-(1, 9, 'math-kingdom', 490, 300, '2026-03-25 03:52:37');
+(1, 9, 'math-kingdom', 490, 300, '2026-03-25 03:52:37'),
+(2, 9, 'math-kingdom', 490, 300, '2026-03-25 05:13:24'),
+(3, 9, 'math-kingdom', 490, 300, '2026-03-25 05:16:28');
 
 -- --------------------------------------------------------
 
@@ -55,20 +76,28 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `email` varchar(55) NOT NULL,
   `role` varchar(55) NOT NULL DEFAULT 'student',
-  `xp` int(11) NOT NULL
+  `xp` int(11) NOT NULL,
+  `class_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `role`, `xp`) VALUES
-(8, 'jacobthevaughn3', '$2y$10$fL.VrrvUnjC3xB0TimdNX.2ESAKRKG8OhRBzbQc8PwsLa27pBI8Ui', 'kjvaughn49@gmail.com', 'student', 0),
-(9, 'jacob1', '$2y$10$.Vbijc9SHBtfX.pxmSbSeeZp.Nfi6Qa4WUeWHBR7Sqr6DE2wlg7pm', 'kjvaughn48@gmail.com', 'student', 300);
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `role`, `xp`, `class_id`) VALUES
+(8, 'jacobthevaughn3', '$2y$10$fL.VrrvUnjC3xB0TimdNX.2ESAKRKG8OhRBzbQc8PwsLa27pBI8Ui', 'kjvaughn49@gmail.com', 'student', 0, NULL),
+(9, 'jacob1', '$2y$10$.Vbijc9SHBtfX.pxmSbSeeZp.Nfi6Qa4WUeWHBR7Sqr6DE2wlg7pm', 'kjvaughn48@gmail.com', 'student', 900, 0),
+(10, 'jacob2', '$2y$10$CuvI31.ZdPbJ/AgfkbOBx.C3LZO638RfXRUVGWht/SCWbZteR2TZS', 'silverarrow3039@gmail.com', 'teacher', 0, NULL);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `classes`
+--
+ALTER TABLE `classes`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `scores`
@@ -91,13 +120,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `scores`
 --
 ALTER TABLE `scores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables

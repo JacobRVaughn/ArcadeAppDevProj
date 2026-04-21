@@ -87,6 +87,16 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role
       font-size:12px; letter-spacing:.14em; color:var(--muted2);
       text-transform:uppercase; margin:0 0 12px;
     }
+    .input {
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline: none;
+    }
+    .btn.danger { background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35) }
+    .btn.danger:hover { background: rgba(239,68,68,.25) }
 
     /* Left profile */
     .profile-head{display:flex; gap:12px; align-items:center}
@@ -278,25 +288,167 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['role
         <div id="missions"></div>
       </main>
 
-      <!-- RIGHT: Mini leaderboard -->
-      <aside class="card pad" aria-label="Mini leaderboard">
-        <div class="section-title">Top Cadets</div>
+  <!-- RIGHT column wrapper -->
+  <div style="display:flex; flex-direction:column; gap:18px;">
 
-        <div id="miniLeaderboard"></div>
+    <!-- Mini leaderboard (existing) -->
+    <aside class="card pad" aria-label="Mini leaderboard">
+      <div class="section-title">Top Cadets</div>
+      <div id="miniLeaderboard"></div>
+      <div class="leader-actions">
+        <button class="btn" style="width:100%" id="fullLeaderboardBtn">VIEW FULL LEADERBOARD</button>
+        <p class="muted" style="margin:10px 2px 0; font-size:12px">
+          Scores are placeholders until backend integration.
+        </p>
+      </div>
+    </aside>
 
-        <div class="leader-actions">
-          <button class="btn" style="width:100%" id="fullLeaderboardBtn">VIEW FULL LEADERBOARD</button>
-          <p class="muted" style="margin:10px 2px 0; font-size:12px">
-            Scores are placeholders until backend integration.
-          </p>
-        </div>
-      </aside>
-
+<!-- Class Box -->
+<aside class="card pad" aria-label="My Class">
+  <div class="section-title">My Class</div>
+ 
+  <!-- State A: enrolled -->
+  <div id="classEnrolled" style="display:none">
+    <div style="
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:10px;
+    ">
+      <p style="margin:0; font-weight:700; font-size:15px" id="classNameDisplay"></p>
+      <p style="margin:6px 0 0; font-size:12px; color:var(--muted2)">
+        Code: <span style="
+          font-family:ui-monospace,monospace;
+          background:rgba(255,255,255,.06);
+          border:1px solid var(--stroke);
+          border-radius:999px;
+          padding:2px 8px;
+        " id="classCodeDisplay"></span>
+      </p>
     </div>
+    <button class="btn danger" style="width:100%" id="leaveClassBtn">LEAVE CLASS</button>
   </div>
+ 
+    <!-- State B: not enrolled -->
+    <div id="classJoin" style="display:none">
+      <p class="muted" style="margin:0 0 10px; font-size:13px">Enter your teacher's class code to join.</p>
+      <div style="display:flex; gap:8px">
+        <input
+          id="classCodeInput"
+          class="input"
+          placeholder="e.g. AB3XY7"
+          maxlength="8"
+          style="flex:1; text-transform:uppercase; font-family:ui-monospace,monospace; letter-spacing:.1em"
+        />
+        <button class="btn primary" id="joinClassBtn">JOIN</button>
+      </div>
+      <p id="classError" style="margin:8px 0 0; font-size:12px; color:var(--danger); display:none"></p>
+    </div>
+  
+    <!-- State C: loading -->
+    <div id="classLoading">
+      <p class="muted" style="margin:0; font-size:13px">Loading...</p>
+    </div>
+  </aside>
 
+  </div> 
+
+  </div> 
+  </div>   
   <div class="toast" id="toast">Placeholder</div>
 
+
+  <script>
+    // ---- Class Box ----
+    async function loadClassBox() {
+      showClassState("loading");
+      try {
+        const res  = await fetch("join_class.php");
+        const text = await res.text(); // read as text first
+        console.log("join_class.php status:", res.status);
+        console.log("join_class.php response:", text);
+        const data = JSON.parse(text); // then parse manually
+        if (data.class) {
+          showEnrolled(data.class);
+        } else {
+          showClassState("join");
+        }
+      } catch (err) {
+        console.error("loadClassBox error:", err);
+        showClassState("join");
+      }
+    }
+  
+    function showClassState(state) {
+      document.getElementById("classEnrolled").style.display = state === "enrolled" ? "block" : "none";
+      document.getElementById("classJoin").style.display     = state === "join"     ? "block" : "none";
+      document.getElementById("classLoading").style.display  = state === "loading"  ? "block" : "none";
+    }
+  
+    function showEnrolled(cls) {
+      document.getElementById("classNameDisplay").textContent = cls.name;
+      document.getElementById("classCodeDisplay").textContent = cls.code;
+      showClassState("enrolled");
+    }
+  
+    document.getElementById("joinClassBtn").addEventListener("click", async () => {
+      const input = document.getElementById("classCodeInput");
+      const code  = input.value.trim().toUpperCase();
+      const errEl = document.getElementById("classError");
+      errEl.style.display = "none";
+  
+      if (!code) {
+        errEl.textContent    = "Please enter a class code.";
+        errEl.style.display  = "block";
+        return;
+      }
+  
+      document.getElementById("joinClassBtn").disabled = true;
+  
+      try {
+        const res  = await fetch("join_class.php", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ code })
+        });
+        const data = await res.json();
+  
+        if (!res.ok) {
+          errEl.textContent   = data.error || "Something went wrong.";
+          errEl.style.display = "block";
+        } else {
+          input.value = "";
+          showEnrolled(data.class);
+          showToast(`Joined class: ${data.class.name}`);
+        }
+      } catch {
+        errEl.textContent   = "Network error. Try again.";
+        errEl.style.display = "block";
+      }
+  
+      document.getElementById("joinClassBtn").disabled = false;
+    });
+  
+    // Allow pressing Enter in the input
+    document.getElementById("classCodeInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("joinClassBtn").click();
+    });
+  
+    document.getElementById("leaveClassBtn").addEventListener("click", async () => {
+      if (!confirm("Leave your current class?")) return;
+      try {
+        await fetch("join_class.php", { method: "DELETE" });
+        showClassState("join");
+        showToast("Left class.");
+      } catch {
+        showToast("Could not leave class. Try again.");
+      }
+    });
+  
+    // Call this alongside your other init calls
+    loadClassBox();
+  </script>
   <script>
     // ---- Fetch real data from get_student_data.php ----
     async function loadDashboard() {
