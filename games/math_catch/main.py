@@ -207,6 +207,7 @@ def reset_all(state, balls, basket):
     state["countdown"] = 3.0
     state["spawn_timer"] = 0.0
     state["warn_blink_t"] = 0.0
+    state["xp_overlay_fired"] = False
     balls.clear()
     pop_texts.clear()
 
@@ -227,6 +228,46 @@ def toggle_pause(state):
         state["phase"] = "paused"
     elif state["phase"] == "paused":
         state["phase"] = "play"
+        
+def trigger_xp_overlay(won: bool):
+    """Fire the JS game-over XP overlay exactly once via pygbag's window bridge."""
+    if state.get("xp_overlay_fired"):
+        return
+    state["xp_overlay_fired"] = True
+
+    xp_earned = 300 if won else 100
+
+    try:
+        from platform import window  # pygbag injects this in the browser
+        js_code = f"""
+(function() {{
+  var score   = {state['score']};
+  var xp      = {xp_earned};
+  var gameId  = "math-catch";
+  var targetWin = window.top || window;
+  var targetDoc = targetWin.document;
+
+  function runOverlay() {{
+    if (typeof targetWin.showGameOverXP === "function") {{
+      targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+    }} else {{
+      if (!targetDoc.getElementById("xpo-script")) {{
+        var s = targetDoc.createElement("script");
+        s.id  = "xpo-script";
+        s.src = "/ArcadeAppDevProj/game-over-xp.js";
+        s.onload = function() {{
+          targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+        }};
+        targetDoc.head.appendChild(s);
+      }}
+    }}
+  }}
+  runOverlay();
+}})();
+"""
+        window.eval(js_code)
+    except Exception as e:
+        print(f"[XP overlay] not in browser, skipped. ({e})")
 
 # ---------- Pygame setup ----------
 screen = pygame.display.set_mode((W, H))
@@ -253,6 +294,7 @@ state = {
     "spawn_timer": 0.0,
     "warn_blink_t": 0.0,
     "spawn_interval": SPAWN_START,
+    "xp_overlay_fired": False,
 }
 balls = []
 pop_texts = []
@@ -461,11 +503,13 @@ def update(dt, keys):
                 state["score"] = 0
                 state["phase"] = "game_over"
                 balls.clear()
+                trigger_xp_overlay(won=False)
                 return
 
             if state["current"] == state["target"]:
                 state["phase"] = "win"
                 balls.clear()
+                trigger_xp_overlay(won=True)
                 return
             continue
 
@@ -520,12 +564,15 @@ async def main():
 
                     if easy_rect.collidepoint(mx, my):
                         state["difficulty"] = "easy"
+                        state["xp_overlay_fired"] = False
                         reset_round(state, balls)
                     elif med_rect.collidepoint(mx, my):
                         state["difficulty"] = "medium"
+                        state["xp_overlay_fired"] = False
                         reset_round(state, balls)
                     elif hard_rect.collidepoint(mx, my):
                         state["difficulty"] = "hard"
+                        state["xp_overlay_fired"] = False
                         reset_round(state, balls)
 
                 elif state["phase"] == "target":
