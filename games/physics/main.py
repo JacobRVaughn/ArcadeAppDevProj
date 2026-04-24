@@ -11,6 +11,7 @@ clock = pygame.time.Clock()
 
 FONT = pygame.font.SysFont("arial", 20)
 SMALL_FONT = pygame.font.SysFont("arial", 16)
+TITLE_FONT = pygame.font.SysFont("arial", 22, bold=True)
 
 WHITE = (245, 245, 245)
 BLACK = (20, 20, 20)
@@ -21,6 +22,37 @@ GREEN = (80, 200, 120)
 YELLOW = (240, 200, 60)
 RED = (220, 70, 70)
 PURPLE = (140, 90, 200)
+
+FORCE_INFO = {
+    "F": {
+        "title": "Applied Force",
+        "formula": "F = push/pull force",
+        "desc": "The force used to launch the box.",
+    },
+    "f": {
+        "title": "Friction",
+        "formula": "f = μN",
+        "desc": "Static: f ≤ μsN   |   Kinetic: f = μkN",
+    },
+    "N": {
+        "title": "Normal Force",
+        "formula": "N = mg",
+        "desc": "The force of the ground on the box.",
+    },
+    "W": {
+        "title": "Weight",
+        "formula": "W = mg",
+        "desc": "The force of gravity pulling down on the box.",
+    },
+}
+
+HELP_TEXT = [
+    "1. Use the sliders to change the box's mass, friction, gravity, and launch force.",
+    "2. Click Launch to send the box to the right.",
+    "3. If the launch force is not strong enough, the box will not move.",
+    "4. Get the box into the green goal area to win.",
+    "5. Click the force labels on the arrows to see what each force means.",
+]
 
 def clamp(value, low, high):
     return max(low, min(high, value))
@@ -71,8 +103,11 @@ class Button:
         pygame.draw.rect(surface, self.color, self.rect, border_radius=10)
         pygame.draw.rect(surface, BLACK, self.rect, 2, border_radius=10)
         txt = FONT.render(self.text, True, BLACK)
-        surface.blit(txt, (self.rect.centerx - txt.get_width() // 2,
-                           self.rect.centery - txt.get_height() // 2))
+        surface.blit(
+            txt,
+            (self.rect.centerx - txt.get_width() // 2,
+             self.rect.centery - txt.get_height() // 2),
+        )
 
     def clicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos)
@@ -94,11 +129,15 @@ def draw_arrow(surface, start, end, color, label=None, label_pos=None, width=4, 
     )
     pygame.draw.polygon(surface, color, [end, left, right])
 
+    label_rect = None
     if label:
         txt = SMALL_FONT.render(label, True, color)
         if label_pos is None:
             label_pos = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
-        surface.blit(txt, (label_pos[0] - txt.get_width() // 2, label_pos[1] - txt.get_height() // 2))
+        label_rect = txt.get_rect(center=label_pos)
+        surface.blit(txt, label_rect)
+
+    return label_rect
 
 ground_y = 520
 box_w, box_h = 70, 70
@@ -118,15 +157,22 @@ sliders = [
     Slider(60, 390, 320, "Launch force", 0.0, 300.0, 120.0),
 ]
 
-launch_button = Button(pygame.Rect(60, ground_y + 40, 140, 45), "Launch", GREEN)
-reset_button = Button(pygame.Rect(220, ground_y + 40, 140, 45), "Reset", YELLOW)
+launch_button = Button(pygame.Rect(60, ground_y + 80, 140, 45), "Launch", GREEN)
+reset_button = Button(pygame.Rect(220, ground_y + 80, 140, 45), "Reset", YELLOW)
+help_button = Button(pygame.Rect(WIDTH - 55, 15, 40, 40), "?", BLUE)
+
+active_force_key = None
+popup_anchor = (0, 0)
+show_help = False
 
 def reset_game():
-    global box_x, vx, running_motion, won
+    global box_x, vx, running_motion, won, active_force_key, show_help
     box_x = 120
     vx = 0.0
     running_motion = False
     won = False
+    active_force_key = None
+    show_help = False
 
 def launch_box():
     global vx, running_motion, won
@@ -193,7 +239,7 @@ def update_physics(dt):
     box_rect = pygame.Rect(int(box_x), box_y, box_w, box_h)
     won = (not running_motion) and goal_rect.contains(box_rect)
 
-def draw_force_vectors(box_rect):
+def get_force_layout(box_rect):
     applied, friction, normal, weight, friction_kind = get_forces()
 
     scale = 0.22
@@ -210,42 +256,137 @@ def draw_force_vectors(box_rect):
     friction_len = clamp(friction * scale, 0, max_len)
     vertical_len = clamp(weight * scale, 20, max_len)
 
-    if applied_len >= 3:
+    layout = {
+        "F": {
+            "visible": applied_len >= 3,
+            "start": (centerx, centery),
+            "end": (right + applied_len, centery),
+            "color": RED,
+            "label_pos": (right + 55, centery - 18),
+            "label": "F",
+        },
+        "f": {
+            "visible": friction_len >= 3,
+            "start": (centerx, centery),
+            "end": (left - friction_len, centery),
+            "color": PURPLE,
+            "label_pos": (left - 20, centery - 18),
+            "label": "f",
+        },
+        "N": {
+            "visible": True,
+            "start": (centerx, top - 6),
+            "end": (centerx, top - 6 - vertical_len),
+            "color": GREEN,
+            "label_pos": (centerx + 20, top - 18 - vertical_len // 2),
+            "label": "N",
+        },
+        "W": {
+            "visible": True,
+            "start": (centerx, bottom + 6),
+            "end": (centerx, bottom + 6 + vertical_len),
+            "color": DARK_GRAY,
+            "label_pos": (centerx + 20, bottom + 18 + vertical_len // 2),
+            "label": "W",
+        },
+    }
+
+    return layout
+
+def get_force_hitboxes(box_rect):
+    layout = get_force_layout(box_rect)
+    hits = {}
+
+    for key, item in layout.items():
+        if not item["visible"]:
+            continue
+        txt = SMALL_FONT.render(item["label"], True, item["color"])
+        rect = txt.get_rect(center=item["label_pos"]).inflate(12, 10)
+        hits[key] = rect
+
+    return hits
+
+def draw_force_vectors(box_rect):
+    layout = get_force_layout(box_rect)
+
+    for key, item in layout.items():
+        if not item["visible"]:
+            continue
         draw_arrow(
             screen,
-            (centerx, centery),
-            (right + applied_len, centery),
-            RED,
-            label="F",
-            label_pos=(right + 55, centery - 18),
+            item["start"],
+            item["end"],
+            item["color"],
+            label=item["label"],
+            label_pos=item["label_pos"],
         )
 
-    if friction_len >= 3:
-        draw_arrow(
-            screen,
-            (centerx, centery),
-            (left - friction_len, centery),
-            PURPLE,
-            label="f",
-            label_pos=(left - 20, centery - 18),
-        )
+def draw_force_popup(surface, key, anchor):
+    info = FORCE_INFO[key]
 
-    draw_arrow(
-        screen,
-        (centerx, top - 6),
-        (centerx, top - 6 - vertical_len),
-        GREEN,
-        label="N",
-        label_pos=(centerx + 20, top - 18 - vertical_len // 2),
-    )
+    title_surf = TITLE_FONT.render(info["title"], True, BLACK)
+    formula_surf = FONT.render(info["formula"], True, BLACK)
+    desc_surf = SMALL_FONT.render(info["desc"], True, DARK_GRAY)
 
-    draw_arrow(
-        screen,
-        (centerx, bottom + 6),
-        (centerx, bottom + 6 + vertical_len),
-        DARK_GRAY,
-        label="W",
-        label_pos=(centerx + 20, bottom + 18 + vertical_len // 2),
+    pad = 12
+    gap = 6
+    content_w = max(title_surf.get_width(), formula_surf.get_width(), desc_surf.get_width())
+    content_h = title_surf.get_height() + formula_surf.get_height() + desc_surf.get_height() + gap * 2
+    box_w = content_w + pad * 2
+    box_h = content_h + pad * 2 + 6
+
+    x = clamp(anchor[0] + 16, 10, WIDTH - box_w - 10)
+    y = clamp(anchor[1] - box_h - 16, 10, HEIGHT - box_h - 10)
+
+    box = pygame.Rect(x, y, box_w, box_h)
+    pygame.draw.rect(surface, WHITE, box, border_radius=10)
+    pygame.draw.rect(surface, BLACK, box, 2, border_radius=10)
+
+    close_surf = SMALL_FONT.render("x", True, BLACK)
+    surface.blit(close_surf, (box.right - 16, box.y + 6))
+
+    surface.blit(title_surf, (box.x + pad, box.y + pad))
+    surface.blit(formula_surf, (box.x + pad, box.y + pad + title_surf.get_height() + gap))
+    surface.blit(desc_surf, (box.x + pad, box.y + pad + title_surf.get_height() + gap + formula_surf.get_height() + 4))
+
+def draw_help_popup(surface):
+    lines = [TITLE_FONT.render("How to Play", True, BLACK)]
+    line_surfs = [SMALL_FONT.render(text, True, BLACK) for text in HELP_TEXT]
+
+    pad = 14
+    spacing = 8
+
+    content_w = max([s.get_width() for s in line_surfs] + [lines[0].get_width()])
+    content_h = lines[0].get_height() + 10 + sum(s.get_height() for s in line_surfs) + spacing * (len(line_surfs) - 1)
+
+    box_w = content_w + pad * 2
+    box_h = content_h + pad * 2 + 8
+
+    x = WIDTH - box_w - 20
+    y = 70
+    box = pygame.Rect(x, y, box_w, box_h)
+
+    pygame.draw.rect(surface, WHITE, box, border_radius=10)
+    pygame.draw.rect(surface, BLACK, box, 2, border_radius=10)
+
+    surface.blit(lines[0], (box.x + pad, box.y + pad))
+
+    cur_y = box.y + pad + lines[0].get_height() + 10
+    for s in line_surfs:
+        surface.blit(s, (box.x + pad, cur_y))
+        cur_y += s.get_height() + spacing
+
+    close_surf = SMALL_FONT.render("x", True, BLACK)
+    surface.blit(close_surf, (box.right - 16, box.y + 6))
+
+def draw_help_button(surface):
+    pygame.draw.rect(surface, WHITE, help_button.rect, border_radius=10)
+    pygame.draw.rect(surface, BLACK, help_button.rect, 2, border_radius=10)
+    txt = FONT.render("?", True, BLACK)
+    surface.blit(
+        txt,
+        (help_button.rect.centerx - txt.get_width() // 2,
+         help_button.rect.centery - txt.get_height() // 2 - 1),
     )
 
 def draw():
@@ -267,6 +408,13 @@ def draw():
 
     launch_button.draw(screen)
     reset_button.draw(screen)
+    draw_help_button(screen)
+
+    if active_force_key is not None:
+        draw_force_popup(screen, active_force_key, popup_anchor)
+
+    if show_help:
+        draw_help_popup(screen)
 
     if won:
         txt = FONT.render("WIN", True, GREEN)
@@ -275,8 +423,13 @@ def draw():
     pygame.display.flip()
 
 def main():
+    global active_force_key, popup_anchor, show_help
+
     while True:
         dt = clock.tick(60) / 1000.0
+
+        box_rect = pygame.Rect(int(box_x), box_y, box_w, box_h)
+        force_hits = get_force_hitboxes(box_rect)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -286,8 +439,29 @@ def main():
             for s in sliders:
                 s.handle_event(event)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if help_button.clicked(event):
+                    show_help = not show_help
+                    active_force_key = None
+                else:
+                    clicked_force = False
+
+                    for key, rect in force_hits.items():
+                        if rect.collidepoint(event.pos):
+                            active_force_key = key
+                            popup_anchor = event.pos
+                            clicked_force = True
+                            show_help = False
+                            break
+
+                    if not clicked_force:
+                        active_force_key = None
+                        show_help = False
+
             if launch_button.clicked(event):
                 launch_box()
+                active_force_key = None
+                show_help = False
 
             if reset_button.clicked(event):
                 reset_game()
