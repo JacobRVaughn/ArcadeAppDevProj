@@ -5,6 +5,10 @@ import math
 
 pygame.init()
 
+XP_EARNED = 10
+GAME_ID = "physics"
+_xp_fired = False
+
 WIDTH, HEIGHT = 1000, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
@@ -248,6 +252,42 @@ vx = 0.0
 running_motion = False
 won = False
 
+def trigger_xp_overlay():
+    try:
+        from platform import window
+
+        js_code = f"""
+(function() {{
+  var score   = 1;
+  var xp      = {XP_EARNED};
+  var gameId  = "{GAME_ID}";
+
+  var targetWin = window.top || window;
+  var targetDoc = targetWin.document;
+
+  function runOverlay() {{
+    if (typeof targetWin.showGameOverXP === "function") {{
+      targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+    }} else {{
+      if (!targetDoc.getElementById("xpo-script")) {{
+        var s = targetDoc.createElement("script");
+        s.id  = "xpo-script";
+        s.src = "/ArcadeAppDevProj/game-over-xp.js";
+        s.onload = function() {{
+          targetWin.showGameOverXP({{ gameId: gameId, score: score, xpEarned: xp }});
+        }};
+        targetDoc.head.appendChild(s);
+      }}
+    }}
+  }}
+
+  runOverlay();
+}})();
+"""
+        window.eval(js_code)
+
+    except Exception as e:
+        print(f"[XP overlay] skipped: {e}")
 
 def get_level():
     return LEVELS[current_level_id]
@@ -274,7 +314,7 @@ def set_level(level_id):
 
 
 def reset_game():
-    global box_flat_x, vx, running_motion, won, active_force_key, show_help
+    global box_flat_x, vx, running_motion, won, active_force_key, show_help, _xp_fired
 
     level = get_level()
     box_flat_x = level.start_x
@@ -283,6 +323,7 @@ def reset_game():
     won = False
     active_force_key = None
     show_help = False
+    _xp_fired = False
 
 
 def go_to_menu():
@@ -326,8 +367,11 @@ def launch_box():
 
 
 def check_win():
-    global won
+    global won, _xp_fired
     won = goal_rect_for_level().colliderect(get_box_rect())
+    if won and not _xp_fired:
+        _xp_fired = True
+        trigger_xp_overlay()
 
 
 def update_physics(dt):
@@ -575,7 +619,7 @@ def draw_game():
 def draw_menu():
     screen.fill(WHITE)
 
-    title = BIG_FONT.render("Force Launcher", True, BLACK)
+    title = BIG_FONT.render("Friction Simulator", True, BLACK)
     subtitle = FONT.render("Pick a level to play", True, DARK_GRAY)
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 120))
     screen.blit(subtitle, (WIDTH // 2 - subtitle.get_width() // 2, 170))
