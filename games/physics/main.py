@@ -1,5 +1,5 @@
+import asyncio
 import pygame
-import sys
 from dataclasses import dataclass
 import math
 
@@ -596,7 +596,7 @@ def draw_menu():
     pygame.display.flip()
 
 
-def main():
+async def main():
     global active_force_key, popup_anchor, show_help
 
     while True:
@@ -605,8 +605,7 @@ def main():
         if game_state == "menu":
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+                    return
 
                 if level_buttons[0].clicked(event):
                     set_level(1)
@@ -614,6 +613,7 @@ def main():
                     set_level(2)
 
             draw_menu()
+            await asyncio.sleep(0)
             continue
 
         box_rect = get_box_rect()
@@ -621,8 +621,7 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return
 
             for s in sliders:
                 s.handle_event(event)
@@ -658,7 +657,7 @@ def main():
 
         update_physics(dt)
         draw_game()
-
+        await asyncio.sleep(0)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
