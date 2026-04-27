@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 21, 2026 at 02:50 AM
+-- Generation Time: Apr 27, 2026 at 09:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -39,6 +39,31 @@ CREATE TABLE `classes` (
 
 INSERT INTO `classes` (`id`, `code`, `name`) VALUES
 (0, 'VPMBGB', 'Jacob Class');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `custom_questions`
+--
+
+CREATE TABLE `custom_questions` (
+  `id` int(11) NOT NULL,
+  `class_id` int(11) DEFAULT NULL,
+  `question` text NOT NULL,
+  `correct_answer` varchar(255) NOT NULL,
+  `wrong_answer_1` varchar(255) NOT NULL,
+  `wrong_answer_2` varchar(255) NOT NULL,
+  `wrong_answer_3` varchar(255) NOT NULL,
+  `category` varchar(80) NOT NULL DEFAULT '',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `custom_questions`
+--
+
+INSERT INTO `custom_questions` (`id`, `class_id`, `question`, `correct_answer`, `wrong_answer_1`, `wrong_answer_2`, `wrong_answer_3`, `category`, `created_at`) VALUES
+(1, 0, 'What is 5 + 2', '7', '5', '4', '6', 'Math', '2026-04-27 13:33:14');
 
 -- --------------------------------------------------------
 
@@ -100,6 +125,13 @@ ALTER TABLE `classes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `custom_questions`
+--
+ALTER TABLE `custom_questions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_cq_class` (`class_id`);
+
+--
 -- Indexes for table `scores`
 --
 ALTER TABLE `scores`
@@ -117,6 +149,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `custom_questions`
+--
+ALTER TABLE `custom_questions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `scores`
 --
 ALTER TABLE `scores`
@@ -131,6 +169,12 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `custom_questions`
+--
+ALTER TABLE `custom_questions`
+  ADD CONSTRAINT `fk_cq_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `scores`
