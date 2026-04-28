@@ -62,6 +62,7 @@
     .btn.primary:hover:not(:disabled){background: rgba(79,93,255,.95)}
     .btn.danger{background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35)}
     .btn.danger:hover:not(:disabled){background: rgba(239,68,68,.25)}
+    .btn.success{background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); color:#22C55E}
 
     .wrap{padding:22px 24px}
     .grid{
@@ -72,6 +73,11 @@
     }
     @media (max-width: 1100px){
       .grid{grid-template-columns: 1fr; }
+    }
+
+    /* New full-width row for questions panel */
+    .full-row{
+      margin-top:18px;
     }
 
     .card{
@@ -94,14 +100,22 @@
     .label{
       font-size:11px; color:var(--muted2); letter-spacing:.12em; text-transform:uppercase;
     }
-    .input, .select{
+    .input, .select, .textarea{
       padding:11px 12px;
       border-radius:14px;
       border:1px solid var(--stroke);
       background: rgba(0,0,0,.18);
       color:var(--text);
       outline:none;
+      font-family:var(--font);
+      font-size:13px;
+      transition: border-color .15s ease;
     }
+    .input:focus, .textarea:focus, .select:focus{
+      border-color: rgba(79,93,255,.55);
+      background: rgba(0,0,0,.28);
+    }
+    .textarea{resize:vertical; min-height:70px; line-height:1.5}
     .row{display:flex; gap:10px; align-items:center}
     .row > * {flex:1}
     .select{appearance:none; cursor:pointer}
@@ -124,6 +138,11 @@
       background: rgba(79,93,255,.12);
       border:1px solid rgba(79,93,255,.28);
       font-size:12px; color: rgba(255,255,255,.82);
+    }
+    .pill.green{
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.28);
+      color: rgba(34,197,94,.9);
     }
 
     .divider{
@@ -214,6 +233,133 @@
     }
     .leader-name{font-size:13px}
     .leader-score{font-weight:800}
+
+    /* ================================
+       QUESTION BUILDER STYLES
+    ================================ */
+    .q-panel{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:0;
+    }
+    @media (max-width: 900px){
+      .q-panel{grid-template-columns:1fr}
+    }
+
+    .q-form-col{
+      padding:20px;
+      border-right:1px solid var(--stroke);
+    }
+    @media (max-width: 900px){
+      .q-form-col{border-right:none; border-bottom:1px solid var(--stroke)}
+    }
+
+    .q-list-col{
+      padding:20px;
+    }
+
+    .q-panel-header{
+      display:flex; align-items:center; gap:12px; margin-bottom:16px;
+    }
+    .q-panel-icon{
+      width:38px; height:38px; border-radius:12px; flex-shrink:0;
+      background: linear-gradient(135deg, rgba(34,197,94,.55), rgba(34,197,94,.15));
+      border:1px solid rgba(34,197,94,.35);
+      display:grid; place-items:center; font-size:18px;
+    }
+    .q-panel-title{margin:0; font-size:16px; font-weight:800}
+    .q-panel-sub{margin:3px 0 0; font-size:12px; color:var(--muted2)}
+
+    .wrong-answers{
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    }
+
+    .answer-chip{
+      position:relative;
+      border-radius:14px; border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      padding:10px 12px;
+    }
+    .answer-chip .chip-label{
+      font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2);
+      margin-bottom:4px;
+    }
+    .answer-chip input{
+      width:100%; background:transparent; border:none; outline:none;
+      color:var(--text); font-size:13px; font-family:var(--font);
+    }
+
+    .correct-chip{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.06);
+    }
+    .correct-chip .chip-label{color:rgba(34,197,94,.8)}
+
+    /* Question list */
+    .q-list-header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:12px;
+    }
+    .q-count-badge{
+      padding:4px 10px; border-radius:999px;
+      background: rgba(79,93,255,.15);
+      border:1px solid rgba(79,93,255,.30);
+      font-size:11px; color:rgba(255,255,255,.7);
+      font-weight:600;
+    }
+
+    .q-item{
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:10px;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn{
+      from{opacity:0; transform:translateY(-6px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+    .q-item-top{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    }
+    .q-item-question{
+      font-size:13px; font-weight:600; line-height:1.4; flex:1;
+    }
+    .q-item-actions{display:flex; gap:6px; flex-shrink:0}
+    .q-item-answers{
+      margin-top:10px;
+      display:grid; grid-template-columns:repeat(2,1fr); gap:6px;
+    }
+    .q-answer-pill{
+      font-size:11px; padding:5px 9px; border-radius:999px;
+      border:1px solid var(--stroke); background: rgba(0,0,0,.20);
+      color:var(--muted2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .q-answer-pill.correct{
+      border-color:rgba(34,197,94,.40); background:rgba(34,197,94,.10); color:#22C55E;
+    }
+
+    .q-class-tag{
+      display:inline-block;
+      margin-top:8px; font-size:10px; letter-spacing:.10em; text-transform:uppercase;
+      color:var(--muted2); padding:3px 8px; border-radius:999px;
+      border:1px solid var(--stroke); background:rgba(0,0,0,.20);
+    }
+
+    .q-empty{
+      text-align:center; padding:40px 20px; color:var(--muted2);
+    }
+    .q-empty .q-empty-icon{font-size:32px; margin-bottom:10px}
+    .q-empty p{margin:0; font-size:13px}
+
+    .category-select-wrap{
+      position:relative;
+    }
+    .category-select-wrap::after{
+      content:"▾"; position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      color:var(--muted2); pointer-events:none; font-size:12px;
+    }
 
     /* Loading spinner */
     .spinner{
@@ -359,15 +505,123 @@
       </aside>
 
     </div>
+
+    <!-- ================================
+         CUSTOM QUESTION BUILDER
+    ================================ -->
+    <div class="full-row">
+      <div class="card" aria-label="Custom question builder">
+        <div class="q-panel">
+
+          <!-- LEFT: Form -->
+          <div class="q-form-col">
+            <div class="q-panel-header">
+              <div class="q-panel-icon">❓</div>
+              <div>
+                <h2 class="q-panel-title">Question Builder</h2>
+                <p class="q-panel-sub">Add custom questions that appear in arcade games</p>
+              </div>
+            </div>
+
+            <!-- Class assignment -->
+            <div class="field">
+              <div class="label">Assign to Class</div>
+              <div class="category-select-wrap">
+                <select class="select" id="qClassSelect" style="width:100%">
+                  <option value="">All Classes (Global)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Category -->
+            <div class="field">
+              <div class="label">Category / Subject</div>
+              <input class="input" id="qCategory" placeholder="e.g., Math, History, Science…" maxlength="40" />
+            </div>
+
+            <!-- Question text -->
+            <div class="field">
+              <div class="label">Question</div>
+              <textarea class="textarea" id="qQuestion" placeholder="Type the question that will appear in the game…" maxlength="300"></textarea>
+            </div>
+
+            <!-- Correct answer -->
+            <div class="field">
+              <div class="label">✅ Correct Answer</div>
+              <div class="answer-chip correct-chip">
+                <div class="chip-label">Correct Answer</div>
+                <input id="qCorrect" placeholder="The right answer…" maxlength="120" />
+              </div>
+            </div>
+
+            <!-- Wrong answers -->
+            <div class="field">
+              <div class="label">❌ Wrong Answer Choices</div>
+              <div class="wrong-answers">
+                <div class="answer-chip">
+                  <div class="chip-label">Wrong #1</div>
+                  <input id="qWrong1" placeholder="Distractor…" maxlength="120" />
+                </div>
+                <div class="answer-chip">
+                  <div class="chip-label">Wrong #2</div>
+                  <input id="qWrong2" placeholder="Distractor…" maxlength="120" />
+                </div>
+                <div class="answer-chip" style="grid-column:1/-1">
+                  <div class="chip-label">Wrong #3</div>
+                  <input id="qWrong3" placeholder="Distractor…" maxlength="120" />
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:4px">
+              <button class="btn primary" id="saveQuestionBtn" style="flex:2">SAVE QUESTION</button>
+              <button class="btn" id="clearQuestionBtn" style="flex:1">CLEAR</button>
+            </div>
+          </div>
+
+          <!-- RIGHT: Question list -->
+          <div class="q-list-col">
+            <div class="q-list-header">
+              <div>
+                <div class="section-title" style="margin:0">Saved Questions</div>
+                <p style="margin:4px 0 0; font-size:12px; color:var(--muted2)">
+                  Live in arcade games immediately after saving
+                </p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center">
+                <span class="q-count-badge" id="qCountBadge">0 questions</span>
+                <button class="btn" id="refreshQuestionsBtn" style="padding:7px 10px">↺</button>
+              </div>
+            </div>
+
+            <!-- Filter bar -->
+            <div style="display:flex; gap:8px; margin-bottom:12px">
+              <div class="category-select-wrap" style="flex:1">
+                <select class="select" id="qFilterClass" style="width:100%">
+                  <option value="">All Classes</option>
+                </select>
+              </div>
+              <input class="input" id="qSearch" placeholder="Search questions…" style="flex:1.4" />
+            </div>
+
+            <div id="questionList"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- END QUESTION BUILDER -->
+
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
     // =========================
-    // Config — point this at your PHP file
+    // Config
     // =========================
-    const API_URL = "classes_api.php"; // change path if needed
+    const API_URL       = "classes_api.php";
+    const QUESTIONS_API = "questions_api.php";
 
     // =========================
     // Teacher placeholder
@@ -387,8 +641,8 @@
       { name: "Gabe",   score: 905,  accuracy: 81, games: 8  }
     ];
 
-    // In-memory cache of classes fetched from DB
-    let classesCache = [];
+    let classesCache   = [];
+    let questionsCache = [];
 
     // =========================
     // Utilities
@@ -398,7 +652,7 @@
       t.textContent = msg;
       t.classList.add("show");
       clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
     }
 
     function generateJoinCode(len = 6) {
@@ -438,7 +692,7 @@
     }
 
     // =========================
-    // API calls
+    // Classes API
     // =========================
     async function apiFetchClasses() {
       const res = await fetch(API_URL);
@@ -464,7 +718,33 @@
     }
 
     // =========================
-    // Rendering
+    // Questions API
+    // =========================
+    async function apiFetchQuestions() {
+      const res = await fetch(QUESTIONS_API);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      return data.questions || [];
+    }
+
+    async function apiCreateQuestion(payload) {
+      const res = await fetch(QUESTIONS_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Save failed");
+      return data.question;
+    }
+
+    async function apiDeleteQuestion(id) {
+      const res = await fetch(`${QUESTIONS_API}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Delete failed ${res.status}`);
+    }
+
+    // =========================
+    // Render: Classes
     // =========================
     function renderTeacher() {
       document.getElementById("teacherName").textContent = teacher.name;
@@ -501,20 +781,100 @@
     }
 
     function renderClassSelect() {
-      const select = document.getElementById("classSelect");
-      const current = select.value || "all";
-      select.innerHTML = `<option value="all">All Classes</option>`;
+      const mainSelect = document.getElementById("classSelect");
+      const qClassSel  = document.getElementById("qClassSelect");
+      const qFilterSel = document.getElementById("qFilterClass");
+
+      const currentMain   = mainSelect.value || "all";
+      const currentQClass = qClassSel.value  || "";
+      const currentFilter = qFilterSel.value || "";
+
+      mainSelect.innerHTML  = `<option value="all">All Classes</option>`;
+      qClassSel.innerHTML   = `<option value="">All Classes (Global)</option>`;
+      qFilterSel.innerHTML  = `<option value="">All Classes</option>`;
+
       classesCache.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = `${c.name} (${c.code})`;
-        select.appendChild(opt);
+        const id   = String(c.id);
+        const text = `${c.name} (${c.code})`;
+
+        const o1 = document.createElement("option");
+        o1.value = id; o1.textContent = text;
+        mainSelect.appendChild(o1);
+
+        const o2 = document.createElement("option");
+        o2.value = id; o2.textContent = text;
+        qClassSel.appendChild(o2);
+
+        const o3 = document.createElement("option");
+        o3.value = id; o3.textContent = text;
+        qFilterSel.appendChild(o3);
       });
-      select.value = classesCache.some(c => String(c.id) === current) ? current : "all";
+
+      mainSelect.value  = classesCache.some(c => String(c.id) === currentMain)   ? currentMain   : "all";
+      qClassSel.value   = classesCache.some(c => String(c.id) === currentQClass) ? currentQClass : "";
+      qFilterSel.value  = classesCache.some(c => String(c.id) === currentFilter) ? currentFilter : "";
     }
 
     // =========================
-    // Mock analytics (unchanged)
+    // Render: Questions
+    // =========================
+    function renderQuestionList() {
+      const container = document.getElementById("questionList");
+      const badge      = document.getElementById("qCountBadge");
+      const search     = (document.getElementById("qSearch").value || "").toLowerCase().trim();
+      const filterCls  = document.getElementById("qFilterClass").value;
+
+      let filtered = questionsCache.filter(q => {
+        const matchCls = !filterCls || String(q.class_id || "") === filterCls;
+        const matchQ   = !search
+          || q.question.toLowerCase().includes(search)
+          || (q.category || "").toLowerCase().includes(search);
+        return matchCls && matchQ;
+      });
+
+      badge.textContent = `${questionsCache.length} question${questionsCache.length !== 1 ? "s" : ""}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="q-empty">
+            <div class="q-empty-icon">📋</div>
+            <p>${questionsCache.length === 0
+              ? "No questions yet. Add one using the form!"
+              : "No questions match your filter."
+            }</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      filtered.forEach(q => {
+        const cls = classesCache.find(c => String(c.id) === String(q.class_id));
+        const clsLabel = cls ? `${cls.name} (${cls.code})` : "All Classes";
+
+        const el = document.createElement("div");
+        el.className = "q-item";
+        el.innerHTML = `
+          <div class="q-item-top">
+            <div class="q-item-question">${escapeHtml(q.question)}</div>
+            <div class="q-item-actions">
+              <button class="btn danger" style="padding:6px 9px; font-size:11px" data-qdelete="${escapeHtml(q.id)}">✕</button>
+            </div>
+          </div>
+          <div class="q-item-answers">
+            <div class="q-answer-pill correct">✅ ${escapeHtml(q.correct_answer)}</div>
+            <div class="q-answer-pill">❌ ${escapeHtml(q.wrong_answer_1)}</div>
+            <div class="q-answer-pill">❌ ${escapeHtml(q.wrong_answer_2)}</div>
+            <div class="q-answer-pill">❌ ${escapeHtml(q.wrong_answer_3)}</div>
+          </div>
+          ${q.category ? `<span class="q-class-tag">${escapeHtml(q.category)}</span>` : ""}
+          <span class="q-class-tag" style="margin-left:4px">🏫 ${escapeHtml(clsLabel)}</span>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    // =========================
+    // Mock analytics
     // =========================
     function computeMockAnalytics() {
       const classSelect = document.getElementById("classSelect").value;
@@ -582,7 +942,7 @@
     }
 
     // =========================
-    // Load classes from DB
+    // Load all data
     // =========================
     async function loadAndRender() {
       try {
@@ -597,8 +957,29 @@
       renderAnalytics();
     }
 
+    async function loadQuestions() {
+      try {
+        questionsCache = await apiFetchQuestions();
+      } catch (err) {
+        console.error(err);
+        showToast("Could not load questions from server.");
+        questionsCache = [];
+      }
+      renderQuestionList();
+    }
+
     // =========================
-    // Event handlers
+    // Clear question form
+    // =========================
+    function clearQuestionForm() {
+      ["qQuestion","qCorrect","qWrong1","qWrong2","qWrong3","qCategory"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("qClassSelect").value = "";
+    }
+
+    // =========================
+    // Wire events
     // =========================
     function wireEvents() {
       document.getElementById("terminateBtn").addEventListener("click", () => {
@@ -631,20 +1012,14 @@
         }
 
         setLoading("createClassBtn", true);
-
-        // Generate a code; retry once on collision (server returns 409)
-        let attempts = 0;
-        let created = null;
+        let attempts = 0, created = null;
         while (attempts < 3) {
           const code = generateJoinCode(6);
           try {
             created = await apiCreateClass(name, code);
             break;
           } catch (err) {
-            if (err.status === 409) {
-              attempts++;
-              continue; // code collision, try a new one
-            }
+            if (err.status === 409) { attempts++; continue; }
             setLoading("createClassBtn", false);
             showToast("Error creating class: " + (err.message || "unknown error"));
             return;
@@ -652,14 +1027,9 @@
         }
 
         setLoading("createClassBtn", false);
-
-        if (!created) {
-          showToast("Could not generate a unique code. Try again.");
-          return;
-        }
+        if (!created) { showToast("Could not generate a unique code. Try again."); return; }
 
         nameInput.value = "";
-        // Prepend to cache and re-render (avoids a full reload)
         classesCache.unshift(created);
         renderClassList();
         renderClassSelect();
@@ -667,7 +1037,7 @@
         showToast(`Class created: ${created.name} — Code: ${created.code}`);
       });
 
-      // Class list delegation (copy / view / delete)
+      // Class list delegation
       document.getElementById("classList").addEventListener("click", async (e) => {
         const copyBtn   = e.target.closest("[data-copy]");
         const viewBtn   = e.target.closest("[data-view]");
@@ -675,12 +1045,8 @@
 
         if (copyBtn) {
           const code = copyBtn.getAttribute("data-copy");
-          try {
-            await navigator.clipboard.writeText(code);
-            showToast(`Copied code: ${code}`);
-          } catch {
-            showToast(`Code: ${code}`);
-          }
+          try { await navigator.clipboard.writeText(code); } catch {}
+          showToast(`Copied code: ${code}`);
           return;
         }
 
@@ -697,7 +1063,6 @@
           const cls = classesCache.find(c => String(c.id) === id);
           if (!cls) return;
           if (!confirm(`Delete class "${cls.name}" (${cls.code})? This cannot be undone.`)) return;
-
           deleteBtn.disabled = true;
           try {
             await apiDeleteClass(id);
@@ -705,6 +1070,7 @@
             renderClassList();
             renderClassSelect();
             renderAnalytics();
+            renderQuestionList();
             showToast(`Deleted class: ${cls.name}`);
           } catch (err) {
             showToast("Delete failed: " + err.message);
@@ -718,6 +1084,75 @@
       ["classSelect", "sortSelect", "rangeSelect"].forEach(id => {
         document.getElementById(id).addEventListener("change", renderAnalytics);
       });
+
+      // ---- Question Builder ----
+
+      // Save question
+      document.getElementById("saveQuestionBtn").addEventListener("click", async () => {
+        const question  = (document.getElementById("qQuestion").value || "").trim();
+        const correct   = (document.getElementById("qCorrect").value  || "").trim();
+        const wrong1    = (document.getElementById("qWrong1").value   || "").trim();
+        const wrong2    = (document.getElementById("qWrong2").value   || "").trim();
+        const wrong3    = (document.getElementById("qWrong3").value   || "").trim();
+        const category  = (document.getElementById("qCategory").value || "").trim();
+        const class_id  = document.getElementById("qClassSelect").value || null;
+
+        if (!question) { showToast("Please enter a question."); document.getElementById("qQuestion").focus(); return; }
+        if (!correct)  { showToast("Please enter the correct answer."); document.getElementById("qCorrect").focus(); return; }
+        if (!wrong1)   { showToast("Please enter Wrong Answer #1."); document.getElementById("qWrong1").focus(); return; }
+        if (!wrong2)   { showToast("Please enter Wrong Answer #2."); document.getElementById("qWrong2").focus(); return; }
+        if (!wrong3)   { showToast("Please enter Wrong Answer #3."); document.getElementById("qWrong3").focus(); return; }
+
+        setLoading("saveQuestionBtn", true);
+        try {
+          const created = await apiCreateQuestion({ question, correct_answer: correct, wrong_answer_1: wrong1, wrong_answer_2: wrong2, wrong_answer_3: wrong3, category, class_id });
+          questionsCache.unshift(created);
+          renderQuestionList();
+          clearQuestionForm();
+          showToast("✅ Question saved and live in arcade games!");
+        } catch (err) {
+          showToast("Error saving question: " + err.message);
+        }
+        setLoading("saveQuestionBtn", false);
+      });
+
+      // Clear form
+      document.getElementById("clearQuestionBtn").addEventListener("click", () => {
+        clearQuestionForm();
+        showToast("Form cleared.");
+      });
+
+      // Refresh questions
+      document.getElementById("refreshQuestionsBtn").addEventListener("click", async () => {
+        document.getElementById("refreshQuestionsBtn").disabled = true;
+        await loadQuestions();
+        document.getElementById("refreshQuestionsBtn").disabled = false;
+        showToast("Questions refreshed.");
+      });
+
+      // Delete question (delegation)
+      document.getElementById("questionList").addEventListener("click", async (e) => {
+        const delBtn = e.target.closest("[data-qdelete]");
+        if (!delBtn) return;
+        const id = delBtn.getAttribute("data-qdelete");
+        const q  = questionsCache.find(q => String(q.id) === id);
+        if (!q) return;
+        if (!confirm(`Delete this question?\n\n"${q.question}"`)) return;
+        delBtn.disabled = true;
+        try {
+          await apiDeleteQuestion(id);
+          questionsCache = questionsCache.filter(q => String(q.id) !== id);
+          renderQuestionList();
+          showToast("Question deleted.");
+        } catch (err) {
+          showToast("Delete failed: " + err.message);
+          delBtn.disabled = false;
+        }
+      });
+
+      // Search / filter questions
+      document.getElementById("qSearch").addEventListener("input", renderQuestionList);
+      document.getElementById("qFilterClass").addEventListener("change", renderQuestionList);
     }
 
     // =========================
@@ -725,7 +1160,7 @@
     // =========================
     renderTeacher();
     wireEvents();
-    loadAndRender(); // fetch classes from DB on page load
+    loadAndRender().then(() => loadQuestions());
   </script>
 </body>
 </html>
