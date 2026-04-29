@@ -7,7 +7,7 @@ import math
 WIDTH, HEIGHT = 800, 600
 FPS           = 60
 ENEMY_SPEED   = 1.2
-SPAWN_RATE    = 100  # frames between spawns
+SPAWN_RATE    = 90   # frames between spawns (slightly faster than before)
 
 # Colors
 BLACK      = (0,   0,   10)
@@ -22,32 +22,52 @@ ORANGE     = (255, 160, 50)
 DARK_GRAY  = (20,  20,  40)
 STAR_COLOR = (200, 200, 255)
 
-# ── Question Bank ─────────────────────────────────────────
+# ── Question Bank (2nd Grade) ─────────────────────────────
 # Format: {"prompt": "...", "correct": "word", "wrong": ["w1","w2","w3"]}
 QUESTIONS = [
-    # Sight words
-    {"prompt": "Zap the word that means the opposite of 'off'",   "correct": "on",     "wrong": ["up", "no", "go"]},
-    {"prompt": "Zap the word that means 'not big'",               "correct": "small",  "wrong": ["tall", "fast", "bright"]},
-    {"prompt": "Zap the sight word: something you do with a book","correct": "read",   "wrong": ["jump", "blue", "over"]},
-    {"prompt": "Zap the word that is a color",                    "correct": "red",    "wrong": ["run", "said", "they"]},
-    {"prompt": "Zap the word that means 'not in'",                "correct": "out",    "wrong": ["and", "the", "was"]},
-    {"prompt": "Zap the sight word: opposite of 'she'",           "correct": "he",     "wrong": ["me", "be", "we"]},
-    {"prompt": "Zap the word that means 'myself'",                "correct": "me",     "wrong": ["my", "am", "is"]},
-    {"prompt": "Zap the sight word that means 'also'",            "correct": "too",    "wrong": ["to", "two", "do"]},
-    {"prompt": "Zap the word that means 'more than one'",         "correct": "many",   "wrong": ["much", "more", "most"]},
-    {"prompt": "Zap the sight word: where you live",              "correct": "home",   "wrong": ["some", "come", "dome"]},
+    # Dolch 2nd grade sight words — meaning / usage prompts
+    {"prompt": "Zap the word that means 'a long time ago'",               "correct": "once",    "wrong": ["always", "often", "never"]},
+    {"prompt": "Zap the word that means to pull toward you",              "correct": "bring",   "wrong": ["carry", "toss", "place"]},
+    {"prompt": "Zap the word that means 'close to'",                      "correct": "near",    "wrong": ["under", "above", "around"]},
+    {"prompt": "Zap the word that describes something done many times",   "correct": "often",   "wrong": ["once", "soon", "never"]},
+    {"prompt": "Zap the word that means 'in addition to'",                "correct": "also",    "wrong": ["only", "just", "even"]},
+    {"prompt": "Zap the word that means 'at this time'",                  "correct": "now",     "wrong": ["then", "soon", "later"]},
+    {"prompt": "Zap the sight word: the person telling a story uses this","correct": "us",      "wrong": ["them", "those", "their"]},
+    {"prompt": "Zap the word that is the opposite of 'found'",            "correct": "lost",    "wrong": ["kept", "gave", "told"]},
+    {"prompt": "Zap the word that means 'every single one'",              "correct": "every",   "wrong": ["any", "some", "most"]},
+    {"prompt": "Zap the word that means 'began to grow'",                 "correct": "grew",    "wrong": ["fell", "flew", "drew"]},
+    {"prompt": "Zap the word that means 'at no time'",                    "correct": "never",   "wrong": ["always", "often", "still"]},
+    {"prompt": "Zap the word that means 'to start'",                      "correct": "begin",   "wrong": ["carry", "leave", "those"]},
+    {"prompt": "Zap the word that means 'more than a few but not all'",   "correct": "many",    "wrong": ["both", "none", "few"]},
+    {"prompt": "Zap the word that means 'the same as'",                   "correct": "both",    "wrong": ["each", "much", "only"]},
+    {"prompt": "Zap the word that means the opposite of 'before'",        "correct": "after",   "wrong": ["until", "since", "while"]},
+    {"prompt": "Zap the word that means 'to be aware of'",                "correct": "know",    "wrong": ["show", "grow", "blow"]},
+    {"prompt": "Zap the word that means 'to make something go away'",     "correct": "clean",   "wrong": ["bring", "carry", "start"]},
+    {"prompt": "Zap the word that means 'to move through the air'",       "correct": "fly",     "wrong": ["dry", "try", "cry"]},
+    {"prompt": "Zap the word that means 'very large'",                    "correct": "large",   "wrong": ["close", "light", "short"]},
+    {"prompt": "Zap the word that means 'to put in a place'",             "correct": "place",   "wrong": ["space", "trace", "grace"]},
+    {"prompt": "Zap the word that means 'the piece left over'",           "correct": "last",    "wrong": ["past", "fast", "cast"]},
+    {"prompt": "Zap the word that means 'to move very fast on foot'",     "correct": "run",     "wrong": ["sun", "fun", "gun"]},
+    {"prompt": "Zap the word that means 'belonging to them'",             "correct": "their",   "wrong": ["there", "they", "these"]},
+    {"prompt": "Zap the word that means 'not the same'",                  "correct": "different","wrong": ["other", "better", "another"]},
+    {"prompt": "Zap the word that means 'in the direction of'",           "correct": "toward",  "wrong": ["around", "behind", "inside"]},
+    {"prompt": "Zap the word that means 'to think something is true'",    "correct": "believe", "wrong": ["receive", "achieve", "retrieve"]},
+    {"prompt": "Zap the word that means 'not ever again'",                "correct": "stop",    "wrong": ["drop", "crop", "prop"]},
+    {"prompt": "Zap the word that means 'to make a choice'",              "correct": "decide",  "wrong": ["divide", "provide", "beside"]},
+    {"prompt": "Zap the word that means 'not warm'",                      "correct": "cold",    "wrong": ["bold", "fold", "hold"]},
+    {"prompt": "Zap the word that means 'to go somewhere and come back'", "correct": "return",  "wrong": ["remain", "report", "remind"]},
 
-    # CVC words
-    {"prompt": "Zap the word: a pet that says 'meow'",        "correct": "cat",    "wrong": ["bat", "hat", "rat"]},
-    {"prompt": "Zap the word: opposite of 'cold'",            "correct": "hot",    "wrong": ["hop", "hog", "hob"]},
-    {"prompt": "Zap the word: a baby dog",                    "correct": "pup",    "wrong": ["pub", "bud", "bug"]},
-    {"prompt": "Zap the word: what you sit on",               "correct": "mat",    "wrong": ["man", "map", "mad"]},
-    {"prompt": "Zap the word: a flying animal",               "correct": "bat",    "wrong": ["bad", "ban", "bag"]},
-    {"prompt": "Zap the word: used to cut",                   "correct": "axe",    "wrong": ["age", "ace", "ape"]},
-    {"prompt": "Zap the word: a container for fish",          "correct": "tub",    "wrong": ["rub", "sub", "hub"]},
-    {"prompt": "Zap the word: a round toy",                   "correct": "ball",   "wrong": ["tall", "call", "fall"]},
-    {"prompt": "Zap the word: what light does",               "correct": "lit",    "wrong": ["bit", "fit", "hit"]},
-    {"prompt": "Zap the word: you do this in bed",            "correct": "nap",    "wrong": ["lap", "tap", "cap"]},
+    # Vocabulary / word meaning prompts
+    {"prompt": "Zap the word that means 'a story that is not true'",      "correct": "fiction", "wrong": ["section", "mention", "caption"]},
+    {"prompt": "Zap the word that means 'to give an answer'",             "correct": "reply",   "wrong": ["supply", "apply", "imply"]},
+    {"prompt": "Zap the word that means 'the middle of something'",       "correct": "center",  "wrong": ["corner", "border", "shelter"]},
+    {"prompt": "Zap the word that means 'to move quietly and carefully'", "correct": "creep",   "wrong": ["sweep", "steep", "sleep"]},
+    {"prompt": "Zap the word that is a synonym for 'happy'",              "correct": "glad",    "wrong": ["mad", "bad", "sad"]},
+    {"prompt": "Zap the word that means 'to say words out loud'",         "correct": "speak",   "wrong": ["sneak", "bleak", "freak"]},
+    {"prompt": "Zap the word that means 'not loud'",                      "correct": "quiet",   "wrong": ["quite", "quote", "quilt"]},
+    {"prompt": "Zap the word that means 'a type of weather with ice'",    "correct": "snow",    "wrong": ["slow", "show", "flow"]},
+    {"prompt": "Zap the word that means 'to look at carefully'",          "correct": "watch",   "wrong": ["catch", "match", "patch"]},
+    {"prompt": "Zap the word that means 'not heavy'",                     "correct": "light",   "wrong": ["night", "right", "sight"]},
 ]
 
 # ── Stars (background) ────────────────────────────────────
@@ -72,8 +92,8 @@ class Star:
 # ── Laser ─────────────────────────────────────────────────
 class Laser:
     def __init__(self, x, y):
-        self.x    = x
-        self.y    = y
+        self.x     = x
+        self.y     = y
         self.speed = 14
         self.alive = True
 
@@ -83,10 +103,9 @@ class Laser:
             self.alive = False
 
     def draw(self, surface):
-        # Glowing laser bolt
-        pygame.draw.line(surface, WHITE,  (self.x, self.y),      (self.x, self.y + 18), 2)
-        pygame.draw.line(surface, CYAN,   (self.x, self.y + 2),  (self.x, self.y + 16), 4)
-        pygame.draw.line(surface, WHITE,  (self.x, self.y + 5),  (self.x, self.y + 13), 1)
+        pygame.draw.line(surface, WHITE, (self.x, self.y),     (self.x, self.y + 18), 2)
+        pygame.draw.line(surface, CYAN,  (self.x, self.y + 2), (self.x, self.y + 16), 4)
+        pygame.draw.line(surface, WHITE, (self.x, self.y + 5), (self.x, self.y + 13), 1)
 
     def rect(self):
         return pygame.Rect(self.x - 4, self.y, 8, 20)
@@ -94,8 +113,8 @@ class Laser:
 
 # ── Enemy Word ─────────────────────────────────────────────
 class EnemyWord:
-    COLORS_WRONG   = [RED,    ORANGE, PURPLE]
-    COLORS_CORRECT = [GREEN,  CYAN,   YELLOW]
+    COLORS_WRONG   = [RED,   ORANGE, PURPLE]
+    COLORS_CORRECT = [GREEN, CYAN,   YELLOW]
 
     def __init__(self, word, x, is_correct, font):
         self.word       = word
@@ -110,18 +129,17 @@ class EnemyWord:
         self.color      = random.choice(self.COLORS_CORRECT if is_correct else self.COLORS_WRONG)
         self.hit_flash  = 0
 
-        # Ship shape size based on word length
-        text_surf    = font.render(word, True, WHITE)
-        self.tw      = text_surf.get_width()
-        self.th      = text_surf.get_height()
-        self.w       = self.tw + 28
-        self.h       = self.th + 18
+        text_surf = font.render(word, True, WHITE)
+        self.tw   = text_surf.get_width()
+        self.th   = text_surf.get_height()
+        self.w    = self.tw + 28
+        self.h    = self.th + 18
 
     def update(self, frame):
-        self.y        += self.speed
-        self.wobble   += 0.04
-        self.x        += math.sin(self.wobble) * self.wobble_amp
-        self.x         = max(self.w // 2 + 10, min(WIDTH - self.w // 2 - 10, self.x))
+        self.y       += self.speed
+        self.wobble  += 0.04
+        self.x       += math.sin(self.wobble) * self.wobble_amp
+        self.x        = max(self.w // 2 + 10, min(WIDTH - self.w // 2 - 10, self.x))
         if self.hit_flash > 0:
             self.hit_flash -= 1
 
@@ -131,22 +149,17 @@ class EnemyWord:
         hw = self.w // 2
         hh = self.h // 2
 
-        # Body
-        color = WHITE if self.hit_flash > 0 else self.color
+        color     = WHITE if self.hit_flash > 0 else self.color
         body_rect = pygame.Rect(cx - hw, cy - hh, self.w, self.h)
         pygame.draw.rect(surface, DARK_GRAY, body_rect, border_radius=8)
         pygame.draw.rect(surface, color, body_rect, width=2, border_radius=8)
 
-        # Alien "wings"
         wing_l = [(cx - hw, cy), (cx - hw - 12, cy - 8), (cx - hw - 12, cy + 8)]
         wing_r = [(cx + hw, cy), (cx + hw + 12, cy - 8), (cx + hw + 12, cy + 8)]
         pygame.draw.polygon(surface, color, wing_l)
         pygame.draw.polygon(surface, color, wing_r)
-
-        # "Cannon" nub at bottom
         pygame.draw.rect(surface, color, (cx - 4, cy + hh, 8, 8))
 
-        # Word label
         label = self.font.render(self.word, True, WHITE if self.hit_flash == 0 else DARK_GRAY)
         surface.blit(label, label.get_rect(center=(cx, cy)))
 
@@ -179,20 +192,19 @@ class Particle:
         self.life -= 1
 
     def draw(self, surface):
-        alpha = int(255 * (self.life / self.max))
         r, g, b = self.color
-        fade = (min(255, r), min(255, g), min(255, b))
-        pygame.draw.circle(surface, fade, (int(self.x), int(self.y)), self.size)
+        pygame.draw.circle(surface, (min(255, r), min(255, g), min(255, b)),
+                           (int(self.x), int(self.y)), self.size)
 
 
 # ── Player Ship ────────────────────────────────────────────
 class Player:
-    W, H   = 44, 38
-    SPEED  = 6
+    W, H  = 44, 38
+    SPEED = 6
 
     def __init__(self):
-        self.x      = WIDTH // 2
-        self.y      = HEIGHT - 70
+        self.x              = WIDTH // 2
+        self.y              = HEIGHT - 70
         self.shoot_cooldown = 0
         self.engine_flicker = 0
 
@@ -208,21 +220,17 @@ class Player:
     def draw(self, surface):
         cx = self.x
         cy = self.y
-        # Engine glow (flicker)
         if self.engine_flicker < 6:
             pygame.draw.ellipse(surface, ORANGE, (cx - 8, cy + 20, 16, 12))
             pygame.draw.ellipse(surface, YELLOW, (cx - 4, cy + 22, 8, 6))
 
-        # Body
-        body = [(cx, cy - 18), (cx - 18, cy + 18), (cx + 18, cy + 18)]
+        body  = [(cx, cy - 18), (cx - 18, cy + 18), (cx + 18, cy + 18)]
         pygame.draw.polygon(surface, BLUE, body)
         pygame.draw.polygon(surface, CYAN, body, 2)
 
-        # Cockpit
-        pygame.draw.ellipse(surface, CYAN, (cx - 7, cy - 6, 14, 14))
+        pygame.draw.ellipse(surface, CYAN,  (cx - 7, cy - 6, 14, 14))
         pygame.draw.ellipse(surface, WHITE, (cx - 4, cy - 3, 6, 6))
 
-        # Wings
         lwing = [(cx - 18, cy + 18), (cx - 30, cy + 28), (cx - 10, cy + 18)]
         rwing = [(cx + 18, cy + 18), (cx + 30, cy + 28), (cx + 10, cy + 18)]
         pygame.draw.polygon(surface, PURPLE, lwing)
@@ -241,49 +249,76 @@ class Player:
 
 
 # ── HUD helpers ────────────────────────────────────────────
-def draw_lives(surface, lives, icon_font):
+def draw_lives(surface, lives):
     for i in range(lives):
-        x = WIDTH - 30 - i * 28
-        # Little ship icon for each life
+        x   = WIDTH - 30 - i * 28
         pts = [(x, 10), (x - 8, 22), (x + 8, 22)]
         pygame.draw.polygon(surface, CYAN, pts)
 
 
-def draw_prompt_box(surface, prompt, font, big_font):
-    box = pygame.Rect(10, 10, WIDTH - 20, 50)
+def wrap_prompt(prompt, font, max_width):
+    """Break prompt into lines that fit within max_width."""
+    words = prompt.split()
+    lines, current = [], []
+    for word in words:
+        test = " ".join(current + [word])
+        if font.size(test)[0] <= max_width:
+            current.append(word)
+        else:
+            if current:
+                lines.append(" ".join(current))
+            current = [word]
+    if current:
+        lines.append(" ".join(current))
+    return lines
+
+
+def draw_prompt_box(surface, prompt, font):
+    lines     = wrap_prompt(f"⚡ {prompt}", font, WIDTH - 40)
+    line_h    = font.get_height() + 4
+    box_h     = line_h * len(lines) + 18
+    box       = pygame.Rect(10, 6, WIDTH - 20, box_h)
     pygame.draw.rect(surface, DARK_GRAY, box, border_radius=10)
     pygame.draw.rect(surface, CYAN, box, width=2, border_radius=10)
-    text = big_font.render(f"⚡ {prompt}", True, YELLOW)
-    surface.blit(text, text.get_rect(centerx=WIDTH // 2, centery=35))
+    for i, line in enumerate(lines):
+        text = font.render(line, True, YELLOW)
+        surface.blit(text, text.get_rect(centerx=WIDTH // 2, centery=6 + 9 + line_h * i + line_h // 2))
+    return box_h   # return height so HUD elements can offset below it
+
+
+# ── Score → XP conversion ──────────────────────────────────
+def score_to_xp(score):
+    """Simple linear: 1 XP per 5 points, capped at 500."""
+    return min(500, score // 5)
 
 
 # ── Main ───────────────────────────────────────────────────
 async def main():
     pygame.init()
     screen   = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Word Blaster -- Sight Word Shooter")
+    pygame.display.set_caption("Word Blaster — 2nd Grade Sight Words")
     font     = pygame.font.SysFont("Consolas", 19, bold=True)
     big_font = pygame.font.SysFont("Consolas", 22, bold=True)
     hud_font = pygame.font.SysFont("Consolas", 17)
     clk      = pygame.time.Clock()
 
-    # Stars
     stars = [Star() for _ in range(120)]
 
-    player        = Player()
-    lasers        = []
-    enemies       = []
-    particles     = []
-    score         = 0
-    lives         = 3
-    frame         = 0
-    q_index       = 0
+    player    = Player()
+    lasers    = []
+    enemies   = []
+    particles = []
+    score     = 0
+    lives     = 3
+    frame     = 0
+    q_index   = 0
+
     random.shuffle(QUESTIONS)
-    current_q     = QUESTIONS[q_index % len(QUESTIONS)]
-    flash_msg     = ""
-    flash_color   = GREEN
-    flash_timer   = 0
-    combo         = 0
+    current_q   = QUESTIONS[q_index % len(QUESTIONS)]
+    flash_msg   = ""
+    flash_color = GREEN
+    flash_timer = 0
+    combo       = 0
 
     running = True
     while running:
@@ -303,11 +338,12 @@ async def main():
         keys = pygame.key.get_pressed()
         player.update(keys)
 
-        # ── Spawn enemy words ──
+        # ── Spawn enemies ──
         if frame % SPAWN_RATE == 0:
-            pool    = [current_q["correct"]] + random.sample(current_q["wrong"], min(3, len(current_q["wrong"])))
+            wrong_choices = random.sample(current_q["wrong"], min(3, len(current_q["wrong"])))
+            pool    = [current_q["correct"]] + wrong_choices
             random.shuffle(pool)
-            x_slots = [120, 280, 440, 600, 720]
+            x_slots = [100, 250, 400, 560, 700]
             random.shuffle(x_slots)
             for i, word in enumerate(pool[:len(x_slots)]):
                 enemies.append(EnemyWord(word, x_slots[i], word == current_q["correct"], font))
@@ -323,10 +359,9 @@ async def main():
             e.update(frame)
             if e.y > HEIGHT + 60:
                 if e.is_correct:
-                    # missed the correct word — lose a life
-                    lives     -= 1
-                    combo      = 0
-                    flash_msg   = "Missed it! -1"
+                    lives      -= 1
+                    combo       = 0
+                    flash_msg   = "Missed it! -1 Life"
                     flash_color = RED
                     flash_timer = 55
                 enemies.remove(e)
@@ -335,48 +370,46 @@ async def main():
             if p.life <= 0:
                 particles.remove(p)
 
-        # ── Laser ↔ Enemy collisions ──
+        # ── Collisions ──
         for l in lasers[:]:
             for e in enemies[:]:
                 if l.alive and e.alive and l.rect().colliderect(e.rect()):
                     l.alive = False
                     if e.is_correct:
-                        # 🎉 Correct!
                         combo  += 1
                         pts     = 100 + (combo - 1) * 25
                         score  += pts
-                        flash_msg   = f"NICE! +{pts}" + (" COMBO x{combo}!" if combo > 1 else "")
+                        flash_msg   = f"NICE! +{pts}" + (f"  COMBO x{combo}!" if combo > 1 else "")
                         flash_color = GREEN
                         flash_timer = 65
                         q_index    += 1
                         current_q   = QUESTIONS[q_index % len(QUESTIONS)]
-                        # Boom particles
                         for _ in range(28):
                             particles.append(Particle(e.x, e.y, random.choice([GREEN, CYAN, YELLOW])))
-                        # Clear remaining enemies for this round
                         enemies.clear()
                     else:
-                        # Wrong word shot
                         lives      -= 1
                         combo       = 0
-                        flash_msg   = "Wrong word! -1"
+                        flash_msg   = "Wrong word! -1 Life"
                         flash_color = RED
                         flash_timer = 65
                         for _ in range(14):
                             particles.append(Particle(e.x, e.y, random.choice([RED, ORANGE])))
-                        enemies.remove(e)
+                        if e in enemies:
+                            enemies.remove(e)
                     break
 
-        # ── Player ship hit by enemy reaching bottom boundary ──
+        # ── Enemy too close ──
         player_rect = player.rect()
         for e in enemies[:]:
             if e.alive and e.y > HEIGHT - 90 and e.rect().colliderect(player_rect):
-                lives -= 1
-                combo  = 0
-                flash_msg   = "Enemy too close! -1"
+                lives      -= 1
+                combo       = 0
+                flash_msg   = "Enemy too close! -1 Life"
                 flash_color = RED
                 flash_timer = 55
-                enemies.remove(e)
+                if e in enemies:
+                    enemies.remove(e)
 
         if lives <= 0:
             running = False
@@ -386,50 +419,38 @@ async def main():
 
         # ── Draw ────────────────────────────────────────────
         screen.fill(BLACK)
-
-        # Starfield
         for s in stars:
             s.draw(screen)
-
-        # Ground line / boundary
         pygame.draw.line(screen, (40, 40, 80), (0, HEIGHT - 45), (WIDTH, HEIGHT - 45), 1)
 
-        # Enemies
         for e in enemies:
             if e.alive:
                 e.draw(screen)
-
-        # Lasers
         for l in lasers:
             l.draw(screen)
-
-        # Particles
         for p in particles:
             p.draw(screen)
-
-        # Player
         player.draw(screen)
 
-        # Prompt box
-        draw_prompt_box(screen, current_q["prompt"], font, big_font)
+        prompt_h = draw_prompt_box(screen, current_q["prompt"], big_font)
+        hud_y    = prompt_h + 10
 
-        # HUD - Score
+        # Score
         score_surf = big_font.render(f"SCORE: {score}", True, CYAN)
-        screen.blit(score_surf, (14, 62))
+        screen.blit(score_surf, (14, hud_y))
 
-        # HUD - Lives
+        # Lives
         lives_label = hud_font.render("LIVES:", True, WHITE)
-        screen.blit(lives_label, (WIDTH - 200, 62))
-        draw_lives(screen, lives, hud_font)
+        screen.blit(lives_label, (WIDTH - 200, hud_y))
+        draw_lives(screen, lives)
 
-        # Combo indicator
+        # Combo
         if combo >= 2:
             combo_surf = big_font.render(f"COMBO x{combo}", True, ORANGE)
-            screen.blit(combo_surf, combo_surf.get_rect(centerx=WIDTH // 2, y=68))
+            screen.blit(combo_surf, combo_surf.get_rect(centerx=WIDTH // 2, y=hud_y))
 
         # Flash message
         if flash_timer > 0:
-            alpha    = min(255, flash_timer * 5)
             msg_surf = big_font.render(flash_msg, True, flash_color)
             screen.blit(msg_surf, msg_surf.get_rect(centerx=WIDTH // 2, centery=HEIGHT // 2 - 30))
 
@@ -440,15 +461,29 @@ async def main():
         pygame.display.flip()
         await asyncio.sleep(0)
 
-    # ── Game Over Screen ──
+    # ── Game Over Screen ──────────────────────────────────────
+    # Show a brief on-screen game over while JS overlay loads
+    xp_earned = score_to_xp(score)
+
+    # Inject the game-over XP call via JavaScript (pybag/pygbag bridge)
+    js_call = (
+        f"showGameOverXP({{ gameId: 'word-blaster', score: {score}, xpEarned: {xp_earned} }});"
+    )
+    try:
+        # pygbag exposes window via platform.window
+        import platform
+        platform.window.eval(js_call)
+    except Exception:
+        pass  # Running locally without pygbag — skip JS call
+
     for _ in range(FPS * 5):
         screen.fill(BLACK)
         for s in stars:
             s.update()
             s.draw(screen)
         go   = big_font.render("GAME OVER", True, RED)
-        sc   = big_font.render(f"Final Score: {score}", True, YELLOW)
-        rest = font.render("Refresh to play again!", True, CYAN)
+        sc   = big_font.render(f"Final Score: {score}   XP Earned: +{xp_earned}", True, YELLOW)
+        rest = font.render("Check your XP results above!", True, CYAN)
         screen.blit(go,   go.get_rect(centerx=WIDTH // 2, centery=HEIGHT // 2 - 60))
         screen.blit(sc,   sc.get_rect(centerx=WIDTH // 2, centery=HEIGHT // 2))
         screen.blit(rest, rest.get_rect(centerx=WIDTH // 2, centery=HEIGHT // 2 + 60))
