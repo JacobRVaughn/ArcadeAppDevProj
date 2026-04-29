@@ -274,7 +274,7 @@ def wrap_prompt(prompt, font, max_width):
 
 
 def draw_prompt_box(surface, prompt, font):
-    lines     = wrap_prompt(f"⚡ {prompt}", font, WIDTH - 40)
+    lines = wrap_prompt(f">> {prompt}", font, WIDTH - 40)
     line_h    = font.get_height() + 4
     box_h     = line_h * len(lines) + 18
     box       = pygame.Rect(10, 6, WIDTH - 20, box_h)
